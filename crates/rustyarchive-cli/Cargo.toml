@@ -1,0 +1,10 @@
+[package]
+name = "rustyarchive-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+rpassword.workspace = true
+rustyarchive-core = { path = "../rustyarchive-core" }
