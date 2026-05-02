@@ -121,8 +121,6 @@ pub fn verify_archive(
                 ],
             })
         }
-        VerifyMode::Full => Err(RavencapError::NotImplemented(
-            "full archive verification is planned after manifest and unpack support",
-        )),
+        VerifyMode::Full => crate::archive::verify_archive_contents(input, identities),
     }
 }

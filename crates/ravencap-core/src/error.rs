@@ -4,8 +4,11 @@ pub type Result<T> = std::result::Result<T, RavencapError>;
 
 #[derive(Debug, Error)]
 pub enum RavencapError {
-    #[error("not implemented: {0}")]
-    NotImplemented(&'static str),
+    #[error("invalid options: {0}")]
+    InvalidOptions(&'static str),
+
+    #[error("unsupported operation: {0}")]
+    Unsupported(&'static str),
 
     #[error("invalid archive path: {0}")]
     InvalidPath(String),

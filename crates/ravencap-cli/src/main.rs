@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand};
 use ravencap_core::{
-    EncryptOptions, Identity, InspectInfo, PackOptions, Recipient, VerifyMode, VerifyReport,
+    EncryptOptions, Identity, InspectInfo, PackOptions, Recipient, UnpackOptions, VerifyMode,
+    VerifyReport,
 };
 use tempfile::NamedTempFile;
 
@@ -19,7 +20,7 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Command {
     Pack(PackCommand),
-    Unpack(PathCommand),
+    Unpack(UnpackCommand),
     Encrypt(CryptoCommand),
     Decrypt(CryptoCommand),
     Info(PathCommand),
@@ -61,6 +62,23 @@ struct PackCommand {
 }
 
 #[derive(Args, Debug)]
+struct UnpackCommand {
+    input: String,
+
+    #[arg(short, long)]
+    output: PathBuf,
+
+    #[arg(long)]
+    passphrase: Option<String>,
+
+    #[arg(long)]
+    passphrase_file: Option<PathBuf>,
+
+    #[arg(long = "identity")]
+    identities: Vec<PathBuf>,
+}
+
+#[derive(Args, Debug)]
 struct CryptoCommand {
     #[arg(short, long)]
     input: Option<PathBuf>,
@@ -90,6 +108,9 @@ struct VerifyCommand {
 
     #[arg(long)]
     quick: bool,
+
+    #[arg(long)]
+    json: bool,
 
     #[arg(long)]
     passphrase: Option<String>,
@@ -150,7 +171,15 @@ fn main() -> Result<()> {
             })?;
         }
         Command::Unpack(args) => {
-            println!("unpack scaffold ready for input {}", args.input);
+            let identities =
+                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
+            let input = open_command_input(&args.input)?;
+            let options = identities
+                .into_iter()
+                .fold(UnpackOptions::new(), |options, identity| {
+                    options.identity(identity)
+                });
+            ravencap_core::unpack_archive(input, args.output, options)?;
         }
         Command::Encrypt(args) => {
             let recipients =
@@ -199,7 +228,7 @@ fn main() -> Result<()> {
                 VerifyMode::Full
             };
             let report = ravencap_core::verify_archive(input, identities, mode)?;
-            write_verify_report(std::io::stdout().lock(), &report)?;
+            write_verify_report(std::io::stdout().lock(), &report, args.json)?;
         }
         Command::Keygen(args) => {
             let identity = ravencap_core::generate_private_key();
@@ -332,7 +361,7 @@ fn write_inspect_report(mut output: impl Write, info: &InspectInfo, json: bool) 
         return Ok(());
     }
 
-    writeln!(output, "{}", ravencap_core::inspect::INSPECT_WARNING)
+    writeln!(output, "{}", ravencap_core::INSPECT_WARNING)
         .context("failed to write inspect output")?;
     writeln!(output, "Payload type: {}", info.payload_type)
         .context("failed to write inspect output")?;
@@ -350,7 +379,13 @@ fn write_inspect_report(mut output: impl Write, info: &InspectInfo, json: bool) 
     Ok(())
 }
 
-fn write_verify_report(mut output: impl Write, report: &VerifyReport) -> Result<()> {
+fn write_verify_report(mut output: impl Write, report: &VerifyReport, json: bool) -> Result<()> {
+    if json {
+        serde_json::to_writer_pretty(&mut output, report).context("failed to write verify JSON")?;
+        writeln!(output).context("failed to write verify JSON")?;
+        return Ok(());
+    }
+
     match report.mode.as_str() {
         "quick" if report.success => {
             writeln!(
@@ -367,12 +402,12 @@ fn write_verify_report(mut output: impl Write, report: &VerifyReport) -> Result<
                 .context("failed to write verify output")?;
         }
         _ => {
-            writeln!(output, "verify mode: {}", report.mode)
+            writeln!(output, "Verify mode: {}", report.mode)
                 .context("failed to write verify output")?;
-            writeln!(output, "success: {}", report.success)
+            writeln!(output, "Success: {}", report.success)
                 .context("failed to write verify output")?;
             for note in &report.notes {
-                writeln!(output, "note: {note}").context("failed to write verify output")?;
+                writeln!(output, "Note: {note}").context("failed to write verify output")?;
             }
         }
     }

@@ -4,9 +4,10 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use sha2::{Digest, Sha256};
+use unicode_normalization::UnicodeNormalization;
 use walkdir::WalkDir;
 
-use crate::paths::validate_relative_archive_path;
+use crate::paths::{validate_relative_archive_path, validate_relative_symlink_target};
 use crate::{RavencapError, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -80,10 +81,12 @@ fn push_manifest_entry(
             sha256: sha256_file(filesystem_path)?,
         });
     } else if file_type.is_symlink() {
-        return Err(RavencapError::InvalidPath(format!(
-            "symlink entries are not supported yet: {}",
-            filesystem_path.display()
-        )));
+        let target = symlink_target_to_string(&std::fs::read_link(filesystem_path)?)?;
+        validate_relative_symlink_target(&archive_path, &target)?;
+        entries.push(ManifestEntry::Symlink {
+            path: archive_path,
+            target,
+        });
     } else {
         return Err(RavencapError::InvalidPath(format!(
             "unsupported filesystem entry: {}",
@@ -118,14 +121,24 @@ fn archive_path_for_entry(root: &Path, root_name: &str, entry: &Path) -> Result<
 fn archive_component_to_string(component: &std::ffi::OsStr) -> Result<String> {
     component
         .to_str()
-        .map(|component| component.replace('\\', "/"))
+        .map(normalize_archive_string)
         .ok_or_else(|| RavencapError::InvalidPath("path is not valid UTF-8".to_string()))
 }
 
 fn path_to_forward_slash_string(path: &Path) -> Result<String> {
     path.to_str()
-        .map(|path| path.replace('\\', "/"))
+        .map(normalize_archive_string)
         .ok_or_else(|| RavencapError::InvalidPath("path is not valid UTF-8".to_string()))
+}
+
+fn symlink_target_to_string(path: &Path) -> Result<String> {
+    path.to_str()
+        .map(normalize_archive_string)
+        .ok_or_else(|| RavencapError::InvalidPath("symlink target is not valid UTF-8".to_string()))
+}
+
+fn normalize_archive_string(value: &str) -> String {
+    value.replace('\\', "/").nfc().collect()
 }
 
 fn sha256_file(path: &Path) -> Result<String> {

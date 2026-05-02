@@ -63,7 +63,7 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
         .collect::<Vec<_>>();
 
     if !passphrases.is_empty() && !public_keys.is_empty() {
-        return Err(RavencapError::NotImplemented(
+        return Err(RavencapError::Unsupported(
             "age does not support mixing passphrase and public-key recipients in one file",
         ));
     }
@@ -73,7 +73,7 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
     }
 
     if passphrases.len() > 1 {
-        return Err(RavencapError::NotImplemented(
+        return Err(RavencapError::InvalidOptions(
             "passphrase mode supports exactly one passphrase recipient",
         ));
     }

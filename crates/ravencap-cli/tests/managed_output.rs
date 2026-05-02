@@ -118,6 +118,37 @@ fn quick_verify_authenticates_encrypted_stream() {
 }
 
 #[test]
+fn quick_verify_json_reports_unverified_manifest_and_checksums() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let plaintext = tempdir.path().join("plain.txt");
+    let ciphertext = tempdir.path().join("cipher.rav");
+
+    fs::write(&plaintext, "secret payload").expect("seed plaintext");
+
+    let encrypt_status = ravencap()
+        .args(["encrypt", "--passphrase", "correct", "-i"])
+        .arg(&plaintext)
+        .args(["-o"])
+        .arg(&ciphertext)
+        .status()
+        .expect("run encrypt");
+    assert!(encrypt_status.success());
+
+    let output = ravencap()
+        .args(["verify", "--quick", "--json"])
+        .arg(&ciphertext)
+        .args(["--passphrase", "correct"])
+        .output()
+        .expect("run quick verify json");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
+    assert!(stdout.contains(r#""mode": "quick""#));
+    assert!(stdout.contains(r#""success": true"#));
+    assert!(stdout.contains("archive manifest and file checksums were not verified"));
+}
+
+#[test]
 fn quick_verify_fails_with_wrong_passphrase() {
     let tempdir = tempfile::tempdir().expect("tempdir");
     let plaintext = tempdir.path().join("plain.txt");
@@ -213,4 +244,105 @@ fn inspect_json_marks_content_stream_unverified() {
     let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
     assert!(stdout.contains(r#""payload_type": "tar_archive""#));
     assert!(stdout.contains(r#""content_stream_verified": false"#));
+}
+
+#[test]
+fn unpack_restores_packed_folder() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let folder = tempdir.path().join("folder");
+    let nested = folder.join("nested");
+    let file = nested.join("note.txt");
+    let archive = tempdir.path().join("folder.rav");
+    let output = tempdir.path().join("restored");
+
+    fs::create_dir_all(&nested).expect("create nested dir");
+    fs::write(&file, "archive payload").expect("seed file");
+
+    let pack_status = ravencap()
+        .args(["pack", "--passphrase", "correct"])
+        .arg(&folder)
+        .args(["-o"])
+        .arg(&archive)
+        .status()
+        .expect("run pack");
+    assert!(pack_status.success());
+
+    let unpack_status = ravencap()
+        .arg("unpack")
+        .arg(&archive)
+        .args(["--passphrase", "correct", "-o"])
+        .arg(&output)
+        .status()
+        .expect("run unpack");
+    assert!(unpack_status.success());
+
+    assert_eq!(
+        fs::read_to_string(output.join("folder/nested/note.txt")).expect("read restored file"),
+        "archive payload"
+    );
+}
+
+#[test]
+fn full_verify_reports_manifest_and_checksum_validation() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let folder = tempdir.path().join("folder");
+    let file = folder.join("note.txt");
+    let archive = tempdir.path().join("folder.rav");
+
+    fs::create_dir(&folder).expect("create folder");
+    fs::write(&file, "archive payload").expect("seed file");
+
+    let pack_status = ravencap()
+        .args(["pack", "--passphrase", "correct"])
+        .arg(&folder)
+        .args(["-o"])
+        .arg(&archive)
+        .status()
+        .expect("run pack");
+    assert!(pack_status.success());
+
+    let output = ravencap()
+        .arg("verify")
+        .arg(&archive)
+        .args(["--passphrase", "correct"])
+        .output()
+        .expect("run full verify");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
+    assert!(stdout.contains("Verify mode: full"));
+    assert!(stdout.contains("archive manifest and file checksums verified"));
+}
+
+#[test]
+fn full_verify_json_reports_manifest_and_checksum_validation() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let folder = tempdir.path().join("folder");
+    let file = folder.join("note.txt");
+    let archive = tempdir.path().join("folder.rav");
+
+    fs::create_dir(&folder).expect("create folder");
+    fs::write(&file, "archive payload").expect("seed file");
+
+    let pack_status = ravencap()
+        .args(["pack", "--passphrase", "correct"])
+        .arg(&folder)
+        .args(["-o"])
+        .arg(&archive)
+        .status()
+        .expect("run pack");
+    assert!(pack_status.success());
+
+    let output = ravencap()
+        .arg("verify")
+        .arg(&archive)
+        .args(["--passphrase", "correct", "--json"])
+        .output()
+        .expect("run full verify json");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
+    assert!(stdout.contains(r#""mode": "full""#));
+    assert!(stdout.contains(r#""success": true"#));
+    assert!(stdout.contains("archive manifest and file checksums verified"));
 }

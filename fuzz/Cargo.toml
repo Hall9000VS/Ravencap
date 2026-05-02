@@ -1,0 +1,29 @@
+[package]
+name = "ravencap-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+ravencap-core = { path = "../crates/ravencap-core" }
+ravencap-format = { path = "../crates/ravencap-format" }
+serde_json = "1"
+tar = "0.4"
+
+[[bin]]
+name = "ravp_prelude_parser"
+path = "fuzz_targets/ravp_prelude_parser.rs"
+
+[[bin]]
+name = "manifest_parser"
+path = "fuzz_targets/manifest_parser.rs"
+
+[[bin]]
+name = "archive_path_validator"
+path = "fuzz_targets/archive_path_validator.rs"
+
+[[bin]]
+name = "tar_entry_path_validator"
+path = "fuzz_targets/tar_entry_path_validator.rs"

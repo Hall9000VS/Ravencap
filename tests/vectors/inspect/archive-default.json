@@ -1,0 +1,10 @@
+{
+  "payload_type": "tar_archive",
+  "compression": "zstd",
+  "manifest_version": 1,
+  "files": 1,
+  "directories": 1,
+  "symlinks": 0,
+  "uncompressed_size": 27,
+  "content_stream_verified": false
+}

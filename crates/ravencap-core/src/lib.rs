@@ -1,11 +1,94 @@
-pub mod archive;
-pub mod decrypt;
-pub mod encrypt;
+//! High-level Ravencap APIs for age-compatible streaming encryption and archives.
+//!
+//! The v1 public surface is intentionally small: callers use the top-level
+//! functions and option types in this crate, while archive parsing, encryption
+//! plumbing, and extraction internals remain private implementation details.
+//!
+//! Raw stream encryption:
+//!
+//! ```no_run
+//! # fn main() -> ravencap_core::Result<()> {
+//! let plaintext = b"secret payload";
+//! let mut encrypted = Vec::new();
+//! ravencap_core::encrypt_stream(
+//!     plaintext.as_slice(),
+//!     &mut encrypted,
+//!     ravencap_core::EncryptOptions::new()
+//!         .recipient(ravencap_core::Recipient::passphrase("correct")),
+//! )?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! Raw stream decryption:
+//!
+//! ```no_run
+//! # fn main() -> ravencap_core::Result<()> {
+//! # let encrypted: Vec<u8> = Vec::new();
+//! let mut plaintext = Vec::new();
+//! ravencap_core::decrypt_stream(
+//!     encrypted.as_slice(),
+//!     &mut plaintext,
+//!     vec![ravencap_core::Identity::passphrase("correct")],
+//! )?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! Pack and unpack archives:
+//!
+//! ```no_run
+//! # fn main() -> ravencap_core::Result<()> {
+//! let input_path = std::path::Path::new("folder");
+//! let output_dir = std::path::Path::new("restored-folder");
+//! let mut archive = Vec::new();
+//!
+//! ravencap_core::pack_path(
+//!     input_path,
+//!     &mut archive,
+//!     ravencap_core::PackOptions::new()
+//!         .recipient(ravencap_core::Recipient::passphrase("correct")),
+//! )?;
+//!
+//! ravencap_core::unpack_archive(
+//!     archive.as_slice(),
+//!     output_dir,
+//!     ravencap_core::UnpackOptions::new()
+//!         .identity(ravencap_core::Identity::passphrase("correct")),
+//! )?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! Inspect and verify archives:
+//!
+//! ```no_run
+//! # fn main() -> ravencap_core::Result<()> {
+//! # let archive: Vec<u8> = Vec::new();
+//! let inspect = ravencap_core::inspect_manifest(
+//!     archive.as_slice(),
+//!     vec![ravencap_core::Identity::passphrase("correct")],
+//! )?;
+//! assert!(!inspect.content_stream_verified);
+//!
+//! let report = ravencap_core::verify_archive(
+//!     archive.as_slice(),
+//!     vec![ravencap_core::Identity::passphrase("correct")],
+//!     ravencap_core::VerifyMode::Full,
+//! )?;
+//! assert!(report.success);
+//! # Ok(())
+//! # }
+//! ```
+
+mod archive;
+mod decrypt;
+mod encrypt;
 pub mod error;
-pub mod inspect;
+mod inspect;
 pub mod manifest;
 pub mod paths;
-pub mod raw_stream;
+mod raw_stream;
 
 use std::io::{Read, Write};
 use std::path::Path;
@@ -13,6 +96,7 @@ use std::str::FromStr;
 
 use age::secrecy::ExposeSecret;
 pub use error::{RavencapError, Result};
+pub use inspect::INSPECT_WARNING;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Recipient {

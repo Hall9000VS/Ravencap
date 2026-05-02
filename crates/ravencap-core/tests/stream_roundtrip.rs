@@ -60,3 +60,30 @@ fn public_key_streaming_roundtrip() {
 
     assert_eq!(decrypted, plaintext);
 }
+
+#[test]
+fn large_raw_stream_roundtrips_without_seek() {
+    let mut plaintext = Vec::with_capacity(8 * 1024 * 1024);
+    for index in 0..plaintext.capacity() {
+        plaintext.push((index % 251) as u8);
+    }
+
+    let passphrase = "large stream release candidate";
+    let mut ciphertext = Vec::new();
+    ravencap_core::encrypt_stream(
+        plaintext.as_slice(),
+        &mut ciphertext,
+        EncryptOptions::new().recipient(Recipient::passphrase(passphrase)),
+    )
+    .expect("encrypt large stream");
+
+    let mut decrypted = Vec::new();
+    ravencap_core::decrypt_stream(
+        ReadOnlyStream(Cursor::new(ciphertext)),
+        &mut decrypted,
+        vec![Identity::passphrase(passphrase)],
+    )
+    .expect("decrypt large stream");
+
+    assert_eq!(decrypted, plaintext);
+}
