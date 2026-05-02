@@ -10,6 +10,7 @@ Already in place:
 - Ravencap CLI binary and core library crates.
 - Standard age passphrase encryption and decryption.
 - Standard age X25519 key generation, public-key export, public-key encryption, and identity decryption.
+- Non-decrypting `info` command for public age header detection.
 - RAVP prelude constants, parser, and writer.
 - Basic raw stream and pack encryption paths.
 - Managed `-o` writes through same-directory temporary files with `--overwrite` protection.
@@ -22,7 +23,7 @@ Known incomplete areas:
 - Archive mode does not yet build a complete manifest for every entry.
 - Archive mode does not yet apply zstd compression by default.
 - FORMAT still needs the managed output and shell redirection guarantees documented in more detail.
-- Inspect, verify, and info are still placeholder command surfaces.
+- Inspect and verify are still placeholder command surfaces.
 - Safe path validation is still minimal.
 - Fuzz targets and root integration tests are placeholders.
 - v1.0 docs are not complete enough for release.
@@ -142,6 +143,8 @@ Acceptance criteria:
 ## Milestone 5: Info, Inspect, Verify
 
 Goal: complete the trust-model UX.
+
+Status: `info` is implemented as a non-decrypting age header check. `inspect`, `verify --quick`, and full `verify` remain incomplete.
 
 Deliverables:
 

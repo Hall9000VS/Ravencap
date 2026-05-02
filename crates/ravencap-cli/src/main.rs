@@ -140,7 +140,11 @@ fn main() -> Result<()> {
             })?;
         }
         Command::Info(args) => {
-            println!("info scaffold ready for input {}", args.input);
+            let input = open_command_input(&args.input)?;
+            let info = ravencap_core::read_public_info(input)?;
+            with_output(args.output.as_ref(), args.overwrite, |output| {
+                write_public_info(output, &info)
+            })?;
         }
         Command::Inspect(args) => {
             println!("inspect scaffold ready for input {}", args.input);
@@ -252,6 +256,25 @@ fn open_input(path: Option<&PathBuf>) -> Result<Box<dyn Read>> {
         ))),
         None => Ok(Box::new(BufReader::new(std::io::stdin().lock()))),
     }
+}
+
+fn open_command_input(path: &str) -> Result<Box<dyn Read>> {
+    if path == "-" {
+        Ok(Box::new(BufReader::new(std::io::stdin().lock())))
+    } else {
+        Ok(Box::new(BufReader::new(File::open(path).with_context(
+            || format!("failed to open input {path}"),
+        )?)))
+    }
+}
+
+fn write_public_info(mut output: impl Write, info: &ravencap_core::PublicInfo) -> Result<()> {
+    writeln!(output, "age_compatible: {}", info.age_compatible)
+        .context("failed to write info output")?;
+    for note in &info.notes {
+        writeln!(output, "note: {note}").context("failed to write info output")?;
+    }
+    Ok(())
 }
 
 fn with_output(

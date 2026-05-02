@@ -25,6 +25,12 @@ ravencap encrypt -r $(cat alice.ravpub) -i payload.ravp -o payload.rav
 ravencap decrypt --identity alice.ravkey -i payload.rav -o payload.ravp
 ```
 
+Public metadata check:
+
+```sh
+ravencap info payload.rav
+```
+
 Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Omit `--passphrase` to be prompted, or use `--passphrase-file` for scripted local tests.
 
 Managed `-o` writes are committed through a temporary file in the same directory. Existing output paths are preserved unless `--overwrite` is provided.
