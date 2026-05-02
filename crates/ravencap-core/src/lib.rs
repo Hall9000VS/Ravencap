@@ -136,6 +136,11 @@ pub struct PublicInfo {
 pub struct InspectInfo {
     pub payload_type: String,
     pub compression: String,
+    pub manifest_version: u8,
+    pub files: usize,
+    pub directories: usize,
+    pub symlinks: usize,
+    pub uncompressed_size: u64,
     pub content_stream_verified: bool,
 }
 

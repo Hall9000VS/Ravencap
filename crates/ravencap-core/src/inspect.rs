@@ -1,8 +1,15 @@
 use std::io::Read;
 
+use age::Decryptor;
+use ravencap_format::{
+    COMPRESSION_NONE, COMPRESSION_ZSTD, PAYLOAD_RAW, PAYLOAD_TAR_ARCHIVE, RavpPrelude,
+    parse_prelude_prefix,
+};
+
+use crate::manifest::{ArchiveManifest, ManifestEntry};
 use crate::{Identity, InspectInfo, PublicInfo, RavencapError, Result, VerifyMode, VerifyReport};
 
-pub const INSPECT_WARNING: &str = "Warning: this output is based on the encrypted manifest prefix only. The archive content stream has NOT been fully verified.";
+pub const INSPECT_WARNING: &str = "Warning: this output is based on the encrypted manifest prefix only.\nThe archive content stream has NOT been fully verified.\nRun `Ravencap verify` to confirm the archive can be fully read.";
 const AGE_V1_HEADER: &[u8] = b"age-encryption.org/v1\n";
 
 pub fn read_public_info(mut input: impl Read) -> Result<PublicInfo> {
@@ -25,10 +32,76 @@ pub fn read_public_info(mut input: impl Read) -> Result<PublicInfo> {
     })
 }
 
-pub fn inspect_manifest(_input: impl Read, _identities: Vec<Identity>) -> Result<InspectInfo> {
-    Err(RavencapError::NotImplemented(
-        "manifest inspection is planned for Phase 3",
-    ))
+pub fn inspect_manifest(input: impl Read, identities: Vec<Identity>) -> Result<InspectInfo> {
+    let identities = crate::raw_stream::age_identities(&identities)?;
+    let decryptor = Decryptor::new(input).map_err(|error| RavencapError::Age(error.to_string()))?;
+    let mut decrypted = decryptor
+        .decrypt(identities.iter().map(|identity| identity.as_ref()))
+        .map_err(|error| RavencapError::Age(error.to_string()))?;
+
+    let mut prefix = [0_u8; RavpPrelude::SERIALIZED_LEN];
+    decrypted.read_exact(&mut prefix)?;
+    let prelude =
+        parse_prelude_prefix(&prefix).map_err(|error| RavencapError::Format(error.to_string()))?;
+
+    let mut manifest = vec![0_u8; prelude.manifest_length as usize];
+    decrypted.read_exact(&mut manifest)?;
+    let manifest: ArchiveManifest = serde_json::from_slice(&manifest)?;
+    let counts = ManifestCounts::from_manifest(&manifest);
+
+    Ok(InspectInfo {
+        payload_type: payload_type_name(prelude.payload_type).to_string(),
+        compression: compression_name(prelude.compression).to_string(),
+        manifest_version: manifest.version,
+        files: counts.files,
+        directories: counts.directories,
+        symlinks: counts.symlinks,
+        uncompressed_size: counts.uncompressed_size,
+        content_stream_verified: false,
+    })
+}
+
+#[derive(Debug, Default)]
+struct ManifestCounts {
+    files: usize,
+    directories: usize,
+    symlinks: usize,
+    uncompressed_size: u64,
+}
+
+impl ManifestCounts {
+    fn from_manifest(manifest: &ArchiveManifest) -> Self {
+        let mut counts = Self::default();
+
+        for entry in &manifest.entries {
+            match entry {
+                ManifestEntry::File { size, .. } => {
+                    counts.files += 1;
+                    counts.uncompressed_size = counts.uncompressed_size.saturating_add(*size);
+                }
+                ManifestEntry::Directory { .. } => counts.directories += 1,
+                ManifestEntry::Symlink { .. } => counts.symlinks += 1,
+            }
+        }
+
+        counts
+    }
+}
+
+fn payload_type_name(payload_type: u8) -> &'static str {
+    match payload_type {
+        PAYLOAD_RAW => "raw",
+        PAYLOAD_TAR_ARCHIVE => "tar_archive",
+        _ => "unknown",
+    }
+}
+
+fn compression_name(compression: u8) -> &'static str {
+    match compression {
+        COMPRESSION_NONE => "none",
+        COMPRESSION_ZSTD => "zstd",
+        _ => "unknown",
+    }
 }
 
 pub fn verify_archive(

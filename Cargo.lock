@@ -978,6 +978,7 @@ dependencies = [
  "clap",
  "ravencap-core",
  "rpassword",
+ "serde_json",
  "tempfile",
 ]
 

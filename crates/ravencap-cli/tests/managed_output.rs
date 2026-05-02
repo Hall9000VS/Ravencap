@@ -143,3 +143,72 @@ fn quick_verify_fails_with_wrong_passphrase() {
 
     assert!(!output.status.success());
 }
+
+#[test]
+fn inspect_prints_warning_and_manifest_prefix_details() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let folder = tempdir.path().join("folder");
+    let file = folder.join("note.txt");
+    let archive = tempdir.path().join("folder.rav");
+
+    fs::create_dir(&folder).expect("create folder");
+    fs::write(&file, "archive payload").expect("seed file");
+
+    let pack_status = ravencap()
+        .args(["pack", "--passphrase", "correct"])
+        .arg(&folder)
+        .args(["-o"])
+        .arg(&archive)
+        .status()
+        .expect("run pack");
+    assert!(pack_status.success());
+
+    let output = ravencap()
+        .arg("inspect")
+        .arg(&archive)
+        .args(["--passphrase", "correct"])
+        .output()
+        .expect("run inspect");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
+    assert!(
+        stdout.contains("Warning: this output is based on the encrypted manifest prefix only.")
+    );
+    assert!(stdout.contains("The archive content stream has NOT been fully verified."));
+    assert!(stdout.contains("Payload type: tar_archive"));
+    assert!(stdout.contains("Compression: none"));
+    assert!(stdout.contains("Content stream verified: false"));
+}
+
+#[test]
+fn inspect_json_marks_content_stream_unverified() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let folder = tempdir.path().join("folder");
+    let file = folder.join("note.txt");
+    let archive = tempdir.path().join("folder.rav");
+
+    fs::create_dir(&folder).expect("create folder");
+    fs::write(&file, "raw payload").expect("seed file");
+
+    let pack_status = ravencap()
+        .args(["pack", "--passphrase", "correct"])
+        .arg(&folder)
+        .args(["-o"])
+        .arg(&archive)
+        .status()
+        .expect("run pack");
+    assert!(pack_status.success());
+
+    let output = ravencap()
+        .arg("inspect")
+        .arg(&archive)
+        .args(["--passphrase", "correct", "--json"])
+        .output()
+        .expect("run inspect json");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
+    assert!(stdout.contains(r#""payload_type": "tar_archive""#));
+    assert!(stdout.contains(r#""content_stream_verified": false"#));
+}

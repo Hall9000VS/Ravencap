@@ -29,6 +29,8 @@ Public metadata check:
 
 ```sh
 ravencap info payload.rav
+ravencap inspect payload.rav --passphrase "test"
+ravencap inspect payload.rav --passphrase "test" --json
 ravencap verify --quick payload.rav --passphrase "test"
 ```
 
@@ -49,4 +51,4 @@ The full v1.0 closure roadmap is tracked in [docs/v1-closure-plan.md](docs/v1-cl
 
 1. Keep CI green on every push.
 2. Implement archive pack/unpack with safe paths and zstd TAR payloads.
-3. Complete `inspect` and full `verify` semantics.
+3. Complete full `verify` semantics.

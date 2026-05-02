@@ -94,7 +94,7 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
     .map_err(|error| RavencapError::Age(error.to_string()))
 }
 
-fn age_identities(identities: &[Identity]) -> Result<Vec<Box<dyn age::Identity>>> {
+pub(crate) fn age_identities(identities: &[Identity]) -> Result<Vec<Box<dyn age::Identity>>> {
     identities
         .iter()
         .map(|identity| match identity {

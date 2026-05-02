@@ -4,7 +4,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand};
-use ravencap_core::{EncryptOptions, Identity, PackOptions, Recipient, VerifyMode, VerifyReport};
+use ravencap_core::{
+    EncryptOptions, Identity, InspectInfo, PackOptions, Recipient, VerifyMode, VerifyReport,
+};
 use tempfile::NamedTempFile;
 
 #[derive(Parser, Debug)]
@@ -21,7 +23,7 @@ enum Command {
     Encrypt(CryptoCommand),
     Decrypt(CryptoCommand),
     Info(PathCommand),
-    Inspect(PathCommand),
+    Inspect(InspectCommand),
     Verify(VerifyCommand),
     Keygen(OutputCommand),
     Pubkey(PathCommand),
@@ -100,6 +102,29 @@ struct VerifyCommand {
 }
 
 #[derive(Args, Debug)]
+struct InspectCommand {
+    input: String,
+
+    #[arg(short, long)]
+    output: Option<PathBuf>,
+
+    #[arg(long)]
+    overwrite: bool,
+
+    #[arg(long)]
+    json: bool,
+
+    #[arg(long)]
+    passphrase: Option<String>,
+
+    #[arg(long)]
+    passphrase_file: Option<PathBuf>,
+
+    #[arg(long = "identity")]
+    identities: Vec<PathBuf>,
+}
+
+#[derive(Args, Debug)]
 struct OutputCommand {
     #[arg(short, long)]
     output: Option<PathBuf>,
@@ -156,7 +181,13 @@ fn main() -> Result<()> {
             })?;
         }
         Command::Inspect(args) => {
-            println!("inspect scaffold ready for input {}", args.input);
+            let identities =
+                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
+            let input = open_command_input(&args.input)?;
+            let info = ravencap_core::inspect_manifest(input, identities)?;
+            with_output(args.output.as_ref(), args.overwrite, |output| {
+                write_inspect_report(output, &info, args.json)
+            })?;
         }
         Command::Verify(args) => {
             let identities =
@@ -291,6 +322,31 @@ fn write_public_info(mut output: impl Write, info: &ravencap_core::PublicInfo) -
     for note in &info.notes {
         writeln!(output, "note: {note}").context("failed to write info output")?;
     }
+    Ok(())
+}
+
+fn write_inspect_report(mut output: impl Write, info: &InspectInfo, json: bool) -> Result<()> {
+    if json {
+        serde_json::to_writer_pretty(&mut output, info).context("failed to write inspect JSON")?;
+        writeln!(output).context("failed to write inspect JSON")?;
+        return Ok(());
+    }
+
+    writeln!(output, "{}", ravencap_core::inspect::INSPECT_WARNING)
+        .context("failed to write inspect output")?;
+    writeln!(output, "Payload type: {}", info.payload_type)
+        .context("failed to write inspect output")?;
+    writeln!(output, "Compression: {}", info.compression)
+        .context("failed to write inspect output")?;
+    writeln!(output, "Files: {}", info.files).context("failed to write inspect output")?;
+    writeln!(output, "Directories: {}", info.directories)
+        .context("failed to write inspect output")?;
+    writeln!(output, "Symlinks: {}", info.symlinks).context("failed to write inspect output")?;
+    writeln!(output, "Uncompressed size: {}", info.uncompressed_size)
+        .context("failed to write inspect output")?;
+    writeln!(output, "Manifest version: {}", info.manifest_version)
+        .context("failed to write inspect output")?;
+    writeln!(output, "Content stream verified: false").context("failed to write inspect output")?;
     Ok(())
 }
 
