@@ -16,6 +16,7 @@ Already in place:
 - RAVP prelude constants, parser, and writer.
 - Basic raw stream and pack encryption paths.
 - Archive pack applies the zstd default to TAR payload streams.
+- Archive manifests include directory and regular file entries with sizes and SHA-256 hashes.
 - Managed `-o` writes through same-directory temporary files with `--overwrite` protection.
 - Cross-platform CI scaffold with format, clippy, test, audit, and deny jobs.
 - Initial README, format notes, threat model, security, changelog, and fuzz target placeholders.
@@ -24,7 +25,7 @@ Known incomplete areas:
 
 - Full archive unpack is not implemented.
 - Archive mode does not yet build a complete manifest for every entry.
-- Archive mode still needs complete manifests for every entry.
+- Archive mode still needs symlink entries and stricter path policy coverage.
 - FORMAT still needs the managed output and shell redirection guarantees documented in more detail.
 - Full verify is still a placeholder command surface.
 - Safe path validation is still minimal.
@@ -109,7 +110,7 @@ Deliverables:
 - Normalize manifest paths to UTF-8 NFC forward-slash form.
 - Reject non-UTF-8 paths, absolute paths, empty components, `.`, `..`, duplicate normalized paths, and Windows reserved names.
 - Support regular files, directories, and safe relative symlinks.
-- Build bounded manifest JSON before content stream.
+- Build bounded manifest JSON before content stream. [done for directories and regular files]
 - Enforce `MAX_MANIFEST_LENGTH`.
 - Use zstd level 3 by default for archive mode. [done for packed TAR payload streams]
 - Keep raw mode default compression as none.

@@ -2,8 +2,8 @@ use std::io::{Read, Write};
 use std::path::Path;
 
 use ravencap_format::{
-    COMPRESSION_NONE, COMPRESSION_ZSTD, PAYLOAD_RAW, PAYLOAD_TAR_ARCHIVE, RAVP_VERSION,
-    RavpPrelude, parse_prelude_prefix,
+    COMPRESSION_NONE, COMPRESSION_ZSTD, MAX_MANIFEST_LENGTH, PAYLOAD_RAW, PAYLOAD_TAR_ARCHIVE,
+    RAVP_VERSION, RavpPrelude, parse_prelude_prefix,
 };
 
 use crate::manifest::ArchiveManifest;
@@ -59,7 +59,7 @@ pub fn pack_raw(mut input: impl Read, mut output: impl Write) -> Result<()> {
 fn pack_tar(path: &Path, mut output: impl Write, compression: &Compression) -> Result<()> {
     write_ravp_header(
         PAYLOAD_TAR_ARCHIVE,
-        &ArchiveManifest::tar_archive(path),
+        &ArchiveManifest::tar_archive(path)?,
         compression_code(compression),
         &mut output,
     )?;
@@ -110,6 +110,13 @@ fn write_ravp_header(
     mut output: impl Write,
 ) -> Result<()> {
     let manifest = serde_json::to_vec(manifest)?;
+    if manifest.len() as u64 > MAX_MANIFEST_LENGTH {
+        return Err(RavencapError::Format(format!(
+            "manifest length exceeds limit: {}",
+            manifest.len()
+        )));
+    }
+
     let prelude = RavpPrelude {
         payload_version: RAVP_VERSION,
         payload_type,

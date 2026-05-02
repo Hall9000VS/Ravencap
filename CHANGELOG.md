@@ -9,3 +9,4 @@
 - Implemented `verify --quick` to authenticate the full outer age stream without manifest or checksum verification.
 - Implemented `inspect` human and JSON output for the decrypted RAVP prelude and manifest prefix.
 - Applied the archive-mode zstd default to packed TAR payload streams.
+- Added full archive manifest entries for directories and regular files with sizes and SHA-256 hashes.
