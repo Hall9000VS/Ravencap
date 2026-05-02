@@ -29,6 +29,7 @@ Public metadata check:
 
 ```sh
 ravencap info payload.rav
+ravencap verify --quick payload.rav --passphrase "test"
 ```
 
 Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Omit `--passphrase` to be prompted, or use `--passphrase-file` for scripted local tests.
@@ -48,4 +49,4 @@ The full v1.0 closure roadmap is tracked in [docs/v1-closure-plan.md](docs/v1-cl
 
 1. Keep CI green on every push.
 2. Implement archive pack/unpack with safe paths and zstd TAR payloads.
-3. Complete `info`, `inspect`, and `verify` semantics.
+3. Complete `inspect` and full `verify` semantics.

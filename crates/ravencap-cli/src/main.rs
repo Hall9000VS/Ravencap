@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand};
-use ravencap_core::{EncryptOptions, Identity, PackOptions, Recipient};
+use ravencap_core::{EncryptOptions, Identity, PackOptions, Recipient, VerifyMode, VerifyReport};
 use tempfile::NamedTempFile;
 
 #[derive(Parser, Debug)]
@@ -88,6 +88,15 @@ struct VerifyCommand {
 
     #[arg(long)]
     quick: bool,
+
+    #[arg(long)]
+    passphrase: Option<String>,
+
+    #[arg(long)]
+    passphrase_file: Option<PathBuf>,
+
+    #[arg(long = "identity")]
+    identities: Vec<PathBuf>,
 }
 
 #[derive(Args, Debug)]
@@ -150,8 +159,16 @@ fn main() -> Result<()> {
             println!("inspect scaffold ready for input {}", args.input);
         }
         Command::Verify(args) => {
-            let mode = if args.quick { "quick" } else { "full" };
-            println!("verify scaffold ready for input {} ({mode})", args.input);
+            let identities =
+                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
+            let input = open_command_input(&args.input)?;
+            let mode = if args.quick {
+                VerifyMode::Quick
+            } else {
+                VerifyMode::Full
+            };
+            let report = ravencap_core::verify_archive(input, identities, mode)?;
+            write_verify_report(std::io::stdout().lock(), &report)?;
         }
         Command::Keygen(args) => {
             let identity = ravencap_core::generate_private_key();
@@ -274,6 +291,36 @@ fn write_public_info(mut output: impl Write, info: &ravencap_core::PublicInfo) -
     for note in &info.notes {
         writeln!(output, "note: {note}").context("failed to write info output")?;
     }
+    Ok(())
+}
+
+fn write_verify_report(mut output: impl Write, report: &VerifyReport) -> Result<()> {
+    match report.mode.as_str() {
+        "quick" if report.success => {
+            writeln!(
+                output,
+                "Quick verify completed: encrypted stream authenticated."
+            )
+            .context("failed to write verify output")?;
+            writeln!(
+                output,
+                "Archive manifest and file checksums were NOT verified."
+            )
+            .context("failed to write verify output")?;
+            writeln!(output, "Run `Ravencap verify` for full verification.")
+                .context("failed to write verify output")?;
+        }
+        _ => {
+            writeln!(output, "verify mode: {}", report.mode)
+                .context("failed to write verify output")?;
+            writeln!(output, "success: {}", report.success)
+                .context("failed to write verify output")?;
+            for note in &report.notes {
+                writeln!(output, "note: {note}").context("failed to write verify output")?;
+            }
+        }
+    }
+
     Ok(())
 }
 

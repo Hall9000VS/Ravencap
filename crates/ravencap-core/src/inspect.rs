@@ -32,18 +32,24 @@ pub fn inspect_manifest(_input: impl Read, _identities: Vec<Identity>) -> Result
 }
 
 pub fn verify_archive(
-    _input: impl Read,
-    _identities: Vec<Identity>,
+    input: impl Read,
+    identities: Vec<Identity>,
     mode: VerifyMode,
 ) -> Result<VerifyReport> {
-    let mode = match mode {
-        VerifyMode::Quick => "quick",
-        VerifyMode::Full => "full",
-    };
-
-    Ok(VerifyReport {
-        mode: mode.to_string(),
-        success: false,
-        notes: vec!["verification pipeline not implemented yet".to_string()],
-    })
+    match mode {
+        VerifyMode::Quick => {
+            crate::decrypt_stream(input, std::io::sink(), identities)?;
+            Ok(VerifyReport {
+                mode: "quick".to_string(),
+                success: true,
+                notes: vec![
+                    "encrypted stream authenticated to EOF".to_string(),
+                    "archive manifest and file checksums were not verified".to_string(),
+                ],
+            })
+        }
+        VerifyMode::Full => Err(RavencapError::NotImplemented(
+            "full archive verification is planned after manifest and unpack support",
+        )),
+    }
 }
