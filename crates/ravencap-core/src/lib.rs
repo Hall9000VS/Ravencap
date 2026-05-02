@@ -9,7 +9,9 @@ pub mod raw_stream;
 
 use std::io::{Read, Write};
 use std::path::Path;
+use std::str::FromStr;
 
+use age::secrecy::ExposeSecret;
 pub use error::{RavencapError, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -192,4 +194,17 @@ pub fn verify_archive(
     mode: VerifyMode,
 ) -> Result<VerifyReport> {
     inspect::verify_archive(input, identities, mode)
+}
+
+pub fn generate_private_key() -> String {
+    age::x25519::Identity::generate()
+        .to_string()
+        .expose_secret()
+        .to_owned()
+}
+
+pub fn public_key_from_private_key(private_key: &str) -> Result<String> {
+    let identity = age::x25519::Identity::from_str(private_key.trim())
+        .map_err(|error| RavencapError::Key(error.to_string()))?;
+    Ok(identity.to_public().to_string())
 }

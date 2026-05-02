@@ -35,3 +35,28 @@ fn phase_0_5_age_streaming_roundtrip_without_seek() {
 
     assert_eq!(decrypted, plaintext);
 }
+
+#[test]
+fn public_key_streaming_roundtrip() {
+    let private_key = ravencap_core::generate_private_key();
+    let public_key = ravencap_core::public_key_from_private_key(&private_key).expect("public key");
+    let plaintext = b"public-key stream payload";
+    let mut ciphertext = Vec::new();
+
+    ravencap_core::encrypt_stream(
+        plaintext.as_slice(),
+        &mut ciphertext,
+        EncryptOptions::new().recipient(Recipient::public_key(public_key)),
+    )
+    .expect("encrypt to public key");
+
+    let mut decrypted = Vec::new();
+    ravencap_core::decrypt_stream(
+        ReadOnlyStream(Cursor::new(ciphertext)),
+        &mut decrypted,
+        vec![Identity::private_key(private_key)],
+    )
+    .expect("decrypt with private key");
+
+    assert_eq!(decrypted, plaintext);
+}

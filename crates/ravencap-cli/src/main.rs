@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand};
 use ravencap_core::{EncryptOptions, Identity, PackOptions, Recipient};
 
@@ -46,6 +46,9 @@ struct PackCommand {
 
     #[arg(long)]
     passphrase_file: Option<PathBuf>,
+
+    #[arg(short = 'r', long = "recipient")]
+    recipients: Vec<String>,
 }
 
 #[derive(Args, Debug)]
@@ -61,6 +64,12 @@ struct CryptoCommand {
 
     #[arg(long)]
     passphrase_file: Option<PathBuf>,
+
+    #[arg(short = 'r', long = "recipient")]
+    recipients: Vec<String>,
+
+    #[arg(long = "identity")]
+    identities: Vec<PathBuf>,
 }
 
 #[derive(Args, Debug)]
@@ -82,26 +91,37 @@ fn main() -> Result<()> {
 
     match cli.command {
         Command::Pack(args) => {
-            let passphrase = resolve_passphrase(args.passphrase, args.passphrase_file)?;
+            let recipients =
+                resolve_recipients(args.passphrase, args.passphrase_file, args.recipients)?;
             let output = open_output(args.output.as_ref())?;
-            let options = PackOptions::passphrase(passphrase);
+            let options = recipients
+                .into_iter()
+                .fold(PackOptions::new(), |options, recipient| {
+                    options.recipient(recipient)
+                });
             ravencap_core::pack_path(args.input, output, options)?;
         }
         Command::Unpack(args) => {
             println!("unpack scaffold ready for input {}", args.input);
         }
         Command::Encrypt(args) => {
-            let passphrase = resolve_passphrase(args.passphrase, args.passphrase_file)?;
+            let recipients =
+                resolve_recipients(args.passphrase, args.passphrase_file, args.recipients)?;
             let input = open_input(args.input.as_ref())?;
             let output = open_output(args.output.as_ref())?;
-            let options = EncryptOptions::new().recipient(Recipient::passphrase(passphrase));
+            let options = recipients
+                .into_iter()
+                .fold(EncryptOptions::new(), |options, recipient| {
+                    options.recipient(recipient)
+                });
             ravencap_core::encrypt_stream(input, output, options)?;
         }
         Command::Decrypt(args) => {
-            let passphrase = resolve_passphrase(args.passphrase, args.passphrase_file)?;
+            let identities =
+                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
             let input = open_input(args.input.as_ref())?;
             let output = open_output(args.output.as_ref())?;
-            ravencap_core::decrypt_stream(input, output, vec![Identity::passphrase(passphrase)])?;
+            ravencap_core::decrypt_stream(input, output, identities)?;
         }
         Command::Info(args) => {
             println!("info scaffold ready for input {}", args.input);
@@ -114,14 +134,95 @@ fn main() -> Result<()> {
             println!("verify scaffold ready for input {} ({mode})", args.input);
         }
         Command::Keygen(args) => {
-            println!("keygen scaffold ready; output {:?}", args.output);
+            let identity = ravencap_core::generate_private_key();
+            write_text_output(args.output.as_deref(), &format!("{identity}\n"))?;
         }
         Command::Pubkey(args) => {
-            println!("pubkey scaffold ready for input {}", args.input);
+            let private_key = std::fs::read_to_string(&args.input)
+                .with_context(|| format!("failed to read identity file {}", args.input))?;
+            let public_key = ravencap_core::public_key_from_private_key(&private_key)?;
+            write_text_output(args.output.as_deref(), &format!("{public_key}\n"))?;
         }
     }
 
     Ok(())
+}
+
+fn resolve_recipients(
+    passphrase: Option<String>,
+    passphrase_file: Option<PathBuf>,
+    recipients: Vec<String>,
+) -> Result<Vec<Recipient>> {
+    let passphrase = resolve_optional_passphrase(passphrase, passphrase_file)?;
+
+    let mut resolved = Vec::new();
+    if let Some(passphrase) = passphrase {
+        resolved.push(Recipient::passphrase(passphrase));
+    } else if recipients.is_empty() {
+        resolved.push(Recipient::passphrase(
+            rpassword::prompt_password("Passphrase: ").context("failed to read passphrase")?,
+        ));
+    }
+    resolved.extend(recipients.into_iter().map(Recipient::public_key));
+    Ok(resolved)
+}
+
+fn resolve_identities(
+    passphrase: Option<String>,
+    passphrase_file: Option<PathBuf>,
+    identities: Vec<PathBuf>,
+) -> Result<Vec<Identity>> {
+    let passphrase = resolve_optional_passphrase(passphrase, passphrase_file)?;
+
+    let mut resolved = Vec::new();
+    if let Some(passphrase) = passphrase {
+        resolved.push(Identity::passphrase(passphrase));
+    } else if identities.is_empty() {
+        resolved.push(Identity::passphrase(
+            rpassword::prompt_password("Passphrase: ").context("failed to read passphrase")?,
+        ));
+    }
+
+    for path in identities {
+        let private_key = std::fs::read_to_string(&path)
+            .with_context(|| format!("failed to read identity file {}", path.display()))?;
+        resolved.push(Identity::private_key(private_key));
+    }
+
+    Ok(resolved)
+}
+
+fn resolve_optional_passphrase(
+    passphrase: Option<String>,
+    passphrase_file: Option<PathBuf>,
+) -> Result<Option<String>> {
+    if passphrase.is_some() && passphrase_file.is_some() {
+        bail!("use only one of --passphrase or --passphrase-file");
+    }
+
+    if let Some(passphrase) = passphrase {
+        return Ok(Some(passphrase));
+    }
+
+    if let Some(path) = passphrase_file {
+        let value = std::fs::read_to_string(&path)
+            .with_context(|| format!("failed to read passphrase file {}", path.display()))?;
+        return Ok(Some(value.trim_end_matches(['\r', '\n']).to_string()));
+    }
+
+    Ok(None)
+}
+
+fn write_text_output(path: Option<&str>, contents: &str) -> Result<()> {
+    match path {
+        Some(path) => {
+            std::fs::write(path, contents).with_context(|| format!("failed to write output {path}"))
+        }
+        None => {
+            print!("{contents}");
+            Ok(())
+        }
+    }
 }
 
 fn open_input(path: Option<&PathBuf>) -> Result<Box<dyn Read>> {
@@ -140,21 +241,4 @@ fn open_output(path: Option<&PathBuf>) -> Result<Box<dyn Write>> {
         )?))),
         None => Ok(Box::new(BufWriter::new(std::io::stdout().lock()))),
     }
-}
-
-fn resolve_passphrase(
-    passphrase: Option<String>,
-    passphrase_file: Option<PathBuf>,
-) -> Result<String> {
-    if let Some(passphrase) = passphrase {
-        return Ok(passphrase);
-    }
-
-    if let Some(path) = passphrase_file {
-        let value = std::fs::read_to_string(&path)
-            .with_context(|| format!("failed to read passphrase file {}", path.display()))?;
-        return Ok(value.trim_end_matches(['\r', '\n']).to_string());
-    }
-
-    rpassword::prompt_password("Passphrase: ").context("failed to read passphrase")
 }

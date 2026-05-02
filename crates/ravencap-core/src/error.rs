@@ -19,6 +19,9 @@ pub enum RavencapError {
     #[error("format error: {0}")]
     Format(String),
 
+    #[error("key error: {0}")]
+    Key(String),
+
     #[error("serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
 }

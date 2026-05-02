@@ -1,7 +1,6 @@
 use std::io::{Read, Write};
 use std::path::Path;
 
-use age::Encryptor;
 use ravencap_format::{
     COMPRESSION_NONE, PAYLOAD_RAW, PAYLOAD_TAR_ARCHIVE, RAVP_VERSION, RavpPrelude,
     parse_prelude_prefix,
@@ -13,8 +12,7 @@ use crate::{
 };
 
 pub fn pack_path(path: &Path, output: impl Write, options: PackOptions) -> Result<()> {
-    let passphrase = crate::raw_stream::single_passphrase_recipient(&options.recipients)?;
-    let encryptor = Encryptor::with_user_passphrase(crate::raw_stream::secret(passphrase));
+    let encryptor = crate::raw_stream::encryptor_from_recipients(&options.recipients)?;
     let mut encrypted = encryptor
         .wrap_output(output)
         .map_err(|error| RavencapError::Age(error.to_string()))?;

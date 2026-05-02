@@ -1,8 +1,8 @@
 use std::io::{Read, Write};
+use std::str::FromStr;
 
 use age::secrecy::SecretString;
 use age::{Decryptor, Encryptor};
-use std::iter;
 
 use crate::decrypt::validate_identities;
 use crate::encrypt::validate_encrypt_options;
@@ -15,8 +15,7 @@ pub fn encrypt_stream(
 ) -> Result<()> {
     validate_encrypt_options(&options)?;
 
-    let passphrase = single_passphrase_recipient(&options.recipients)?;
-    let encryptor = Encryptor::with_user_passphrase(secret(passphrase));
+    let encryptor = encryptor_from_recipients(&options.recipients)?;
     let mut encrypted = encryptor
         .wrap_output(output)
         .map_err(|error| RavencapError::Age(error.to_string()))?;
@@ -36,11 +35,10 @@ pub fn decrypt_stream(
 ) -> Result<()> {
     validate_identities(&identities)?;
 
-    let passphrase = single_passphrase_identity(&identities)?;
-    let identity = age::scrypt::Identity::new(secret(passphrase));
+    let identities = age_identities(&identities)?;
     let decryptor = Decryptor::new(input).map_err(|error| RavencapError::Age(error.to_string()))?;
     let mut decrypted = decryptor
-        .decrypt(iter::once(&identity as &dyn age::Identity))
+        .decrypt(identities.iter().map(|identity| identity.as_ref()))
         .map_err(|error| RavencapError::Age(error.to_string()))?;
 
     std::io::copy(&mut decrypted, &mut output)?;
@@ -48,31 +46,68 @@ pub fn decrypt_stream(
     Ok(())
 }
 
-pub(crate) fn single_passphrase_recipient(recipients: &[Recipient]) -> Result<&str> {
-    match recipients {
-        [Recipient::Passphrase(passphrase)] => Ok(passphrase),
-        [Recipient::PasswordPrompt] => Err(RavencapError::NotImplemented(
-            "CLI password prompting must resolve to a passphrase before calling core",
-        )),
-        [_] => Err(RavencapError::NotImplemented(
-            "public-key recipients are not implemented in Phase 0.5",
-        )),
-        _ => Err(RavencapError::NotImplemented(
-            "Phase 0.5 supports exactly one passphrase recipient",
-        )),
+pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encryptor> {
+    let passphrases = recipients
+        .iter()
+        .filter_map(|recipient| match recipient {
+            Recipient::Passphrase(passphrase) => Some(passphrase.as_str()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    let public_keys = recipients
+        .iter()
+        .filter_map(|recipient| match recipient {
+            Recipient::PublicKey(public_key) => Some(public_key.as_str()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+
+    if !passphrases.is_empty() && !public_keys.is_empty() {
+        return Err(RavencapError::NotImplemented(
+            "age does not support mixing passphrase and public-key recipients in one file",
+        ));
     }
+
+    if passphrases.len() == 1 {
+        return Ok(Encryptor::with_user_passphrase(secret(passphrases[0])));
+    }
+
+    if passphrases.len() > 1 {
+        return Err(RavencapError::NotImplemented(
+            "passphrase mode supports exactly one passphrase recipient",
+        ));
+    }
+
+    let parsed = public_keys
+        .iter()
+        .map(|public_key| {
+            age::x25519::Recipient::from_str(public_key.trim())
+                .map_err(|error| RavencapError::Key(error.to_string()))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    Encryptor::with_recipients(
+        parsed
+            .iter()
+            .map(|recipient| recipient as &dyn age::Recipient),
+    )
+    .map_err(|error| RavencapError::Age(error.to_string()))
 }
 
-fn single_passphrase_identity(identities: &[Identity]) -> Result<&str> {
-    match identities {
-        [Identity::Passphrase(passphrase)] => Ok(passphrase),
-        [Identity::PrivateKey(_)] => Err(RavencapError::NotImplemented(
-            "public-key identities are not implemented in Phase 0.5",
-        )),
-        _ => Err(RavencapError::NotImplemented(
-            "Phase 0.5 supports exactly one passphrase identity",
-        )),
-    }
+fn age_identities(identities: &[Identity]) -> Result<Vec<Box<dyn age::Identity>>> {
+    identities
+        .iter()
+        .map(|identity| match identity {
+            Identity::Passphrase(passphrase) => {
+                Ok(Box::new(age::scrypt::Identity::new(secret(passphrase)))
+                    as Box<dyn age::Identity>)
+            }
+            Identity::PrivateKey(private_key) => Ok(Box::new(
+                age::x25519::Identity::from_str(private_key.trim())
+                    .map_err(|error| RavencapError::Key(error.to_string()))?,
+            ) as Box<dyn age::Identity>),
+        })
+        .collect()
 }
 
 pub(crate) fn secret(value: &str) -> SecretString {

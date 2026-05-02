@@ -8,10 +8,21 @@ This repository contains the first working Ravencap implementation slice: a Phas
 
 ## Usage
 
+Password mode:
+
 ```sh
 ravencap encrypt --passphrase "test" -i payload.ravp -o payload.rav
 ravencap decrypt --passphrase "test" -i payload.rav -o payload.ravp
 ravencap pack --passphrase "test" ./folder -o folder.rav
+```
+
+Public-key mode:
+
+```sh
+ravencap keygen -o alice.ravkey
+ravencap pubkey alice.ravkey -o alice.ravpub
+ravencap encrypt -r $(cat alice.ravpub) -i payload.ravp -o payload.rav
+ravencap decrypt --identity alice.ravkey -i payload.rav -o payload.ravp
 ```
 
 Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Omit `--passphrase` to be prompted, or use `--passphrase-file` for scripted local tests.
@@ -25,6 +36,6 @@ Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Omit `--passphr
 
 ## Immediate Next Steps
 
-1. Add public-key recipient and identity support.
-2. Implement extraction for RAVP tar payloads.
+1. Implement extraction for RAVP tar payloads.
+2. Add atomic file output for managed `-o` writes.
 3. Turn the placeholder docs into full v1.0 product documentation.
