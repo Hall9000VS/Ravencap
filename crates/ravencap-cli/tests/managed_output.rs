@@ -1,0 +1,57 @@
+use std::fs;
+use std::process::Command;
+
+fn ravencap() -> Command {
+    Command::new(env!("CARGO_BIN_EXE_ravencap"))
+}
+
+#[test]
+fn output_path_refuses_to_clobber_without_overwrite() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let output = tempdir.path().join("identity.txt");
+    fs::write(&output, "keep me").expect("seed output");
+
+    let status = ravencap()
+        .args(["keygen", "-o"])
+        .arg(&output)
+        .status()
+        .expect("run keygen");
+
+    assert!(!status.success());
+    assert_eq!(fs::read_to_string(&output).expect("read output"), "keep me");
+}
+
+#[test]
+fn failed_decrypt_preserves_existing_overwrite_target() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let plaintext = tempdir.path().join("plain.txt");
+    let ciphertext = tempdir.path().join("cipher.rav");
+    let output = tempdir.path().join("out.txt");
+
+    fs::write(&plaintext, "secret payload").expect("seed plaintext");
+    fs::write(&output, "existing output").expect("seed output");
+
+    let encrypt_status = ravencap()
+        .args(["encrypt", "--passphrase", "correct", "-i"])
+        .arg(&plaintext)
+        .args(["-o"])
+        .arg(&ciphertext)
+        .status()
+        .expect("run encrypt");
+    assert!(encrypt_status.success());
+
+    let decrypt_status = ravencap()
+        .args(["decrypt", "--passphrase", "wrong", "-i"])
+        .arg(&ciphertext)
+        .args(["-o"])
+        .arg(&output)
+        .arg("--overwrite")
+        .status()
+        .expect("run decrypt");
+
+    assert!(!decrypt_status.success());
+    assert_eq!(
+        fs::read_to_string(&output).expect("read output"),
+        "existing output"
+    );
+}

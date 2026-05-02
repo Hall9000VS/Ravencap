@@ -12,6 +12,7 @@ Already in place:
 - Standard age X25519 key generation, public-key export, public-key encryption, and identity decryption.
 - RAVP prelude constants, parser, and writer.
 - Basic raw stream and pack encryption paths.
+- Managed `-o` writes through same-directory temporary files with `--overwrite` protection.
 - Cross-platform CI scaffold with format, clippy, test, audit, and deny jobs.
 - Initial README, format notes, threat model, security, changelog, and fuzz target placeholders.
 
@@ -20,7 +21,7 @@ Known incomplete areas:
 - Full archive unpack is not implemented.
 - Archive mode does not yet build a complete manifest for every entry.
 - Archive mode does not yet apply zstd compression by default.
-- Managed `-o` writes are not atomic yet.
+- FORMAT still needs the managed output and shell redirection guarantees documented in more detail.
 - Inspect, verify, and info are still placeholder command surfaces.
 - Safe path validation is still minimal.
 - Fuzz targets and root integration tests are placeholders.
@@ -77,6 +78,8 @@ Acceptance criteria:
 ## Milestone 2: Managed Output And Atomic Writes
 
 Goal: make `-o` safe and document stdout honestly.
+
+Status: CLI managed output is implemented for `pack`, `encrypt`, `decrypt`, `keygen`, and `pubkey`. Remaining work is documentation depth and any future command-specific output surfaces.
 
 Deliverables:
 

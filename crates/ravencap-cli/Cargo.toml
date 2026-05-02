@@ -13,3 +13,4 @@ anyhow.workspace = true
 clap.workspace = true
 rpassword.workspace = true
 ravencap-core = { path = "../ravencap-core" }
+tempfile.workspace = true

@@ -27,6 +27,8 @@ ravencap decrypt --identity alice.ravkey -i payload.rav -o payload.ravp
 
 Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Omit `--passphrase` to be prompted, or use `--passphrase-file` for scripted local tests.
 
+Managed `-o` writes are committed through a temporary file in the same directory. Existing output paths are preserved unless `--overwrite` is provided.
+
 ## Workspace
 
 - `crates/ravencap-cli`: CLI binary surface.
@@ -39,5 +41,5 @@ Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Omit `--passphr
 The full v1.0 closure roadmap is tracked in [docs/v1-closure-plan.md](docs/v1-closure-plan.md).
 
 1. Keep CI green on every push.
-2. Add atomic file output for managed `-o` writes.
-3. Implement archive pack/unpack with safe paths and zstd TAR payloads.
+2. Implement archive pack/unpack with safe paths and zstd TAR payloads.
+3. Complete `info`, `inspect`, and `verify` semantics.
