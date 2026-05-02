@@ -15,6 +15,7 @@ Already in place:
 - `verify --quick` authentication of the full outer age stream.
 - RAVP prelude constants, parser, and writer.
 - Basic raw stream and pack encryption paths.
+- Archive pack applies the zstd default to TAR payload streams.
 - Managed `-o` writes through same-directory temporary files with `--overwrite` protection.
 - Cross-platform CI scaffold with format, clippy, test, audit, and deny jobs.
 - Initial README, format notes, threat model, security, changelog, and fuzz target placeholders.
@@ -23,7 +24,7 @@ Known incomplete areas:
 
 - Full archive unpack is not implemented.
 - Archive mode does not yet build a complete manifest for every entry.
-- Archive mode does not yet apply zstd compression by default.
+- Archive mode still needs complete manifests for every entry.
 - FORMAT still needs the managed output and shell redirection guarantees documented in more detail.
 - Full verify is still a placeholder command surface.
 - Safe path validation is still minimal.
@@ -110,7 +111,7 @@ Deliverables:
 - Support regular files, directories, and safe relative symlinks.
 - Build bounded manifest JSON before content stream.
 - Enforce `MAX_MANIFEST_LENGTH`.
-- Use zstd level 3 by default for archive mode.
+- Use zstd level 3 by default for archive mode. [done for packed TAR payload streams]
 - Keep raw mode default compression as none.
 
 Acceptance criteria:

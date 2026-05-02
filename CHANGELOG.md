@@ -8,3 +8,4 @@
 - Implemented the `info` command as a non-decrypting public age header check.
 - Implemented `verify --quick` to authenticate the full outer age stream without manifest or checksum verification.
 - Implemented `inspect` human and JSON output for the decrypted RAVP prelude and manifest prefix.
+- Applied the archive-mode zstd default to packed TAR payload streams.

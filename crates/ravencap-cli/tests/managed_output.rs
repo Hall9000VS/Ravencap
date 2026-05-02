@@ -177,7 +177,7 @@ fn inspect_prints_warning_and_manifest_prefix_details() {
     );
     assert!(stdout.contains("The archive content stream has NOT been fully verified."));
     assert!(stdout.contains("Payload type: tar_archive"));
-    assert!(stdout.contains("Compression: none"));
+    assert!(stdout.contains("Compression: zstd"));
     assert!(stdout.contains("Content stream verified: false"));
 }
 
