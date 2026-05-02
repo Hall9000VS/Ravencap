@@ -1,9 +1,9 @@
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, RustyArchiveError>;
+pub type Result<T> = std::result::Result<T, RavencapError>;
 
 #[derive(Debug, Error)]
-pub enum RustyArchiveError {
+pub enum RavencapError {
     #[error("not implemented: {0}")]
     NotImplemented(&'static str),
 

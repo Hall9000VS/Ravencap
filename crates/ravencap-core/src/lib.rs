@@ -10,7 +10,7 @@ pub mod raw_stream;
 use std::io::{Read, Write};
 use std::path::Path;
 
-pub use error::{Result, RustyArchiveError};
+pub use error::{RavencapError, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Recipient {

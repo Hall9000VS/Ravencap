@@ -1,8 +1,6 @@
 use std::io::Read;
 
-use crate::{
-    Identity, InspectInfo, PublicInfo, Result, RustyArchiveError, VerifyMode, VerifyReport,
-};
+use crate::{Identity, InspectInfo, PublicInfo, RavencapError, Result, VerifyMode, VerifyReport};
 
 pub const INSPECT_WARNING: &str = "Warning: this output is based on the encrypted manifest prefix only. The archive content stream has NOT been fully verified.";
 
@@ -14,7 +12,7 @@ pub fn read_public_info(_input: impl Read) -> Result<PublicInfo> {
 }
 
 pub fn inspect_manifest(_input: impl Read, _identities: Vec<Identity>) -> Result<InspectInfo> {
-    Err(RustyArchiveError::NotImplemented(
+    Err(RavencapError::NotImplemented(
         "manifest inspection is planned for Phase 3",
     ))
 }

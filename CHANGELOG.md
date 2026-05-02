@@ -2,4 +2,4 @@
 
 ## Unreleased
 
-- Initialized the RustyArchive workspace, crate layout, docs skeleton, and CI scaffold.
+- Initialized the Ravencap workspace, crate layout, docs skeleton, and CI scaffold.

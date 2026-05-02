@@ -1,7 +1,0 @@
-[package]
-name = "rustyarchive-testkit"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-rustyarchive-format = { path = "../rustyarchive-format" }

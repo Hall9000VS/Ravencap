@@ -6,7 +6,7 @@ use std::iter;
 
 use crate::decrypt::validate_identities;
 use crate::encrypt::validate_encrypt_options;
-use crate::{EncryptOptions, Identity, Recipient, Result, RustyArchiveError};
+use crate::{EncryptOptions, Identity, RavencapError, Recipient, Result};
 
 pub fn encrypt_stream(
     mut input: impl Read,
@@ -19,12 +19,12 @@ pub fn encrypt_stream(
     let encryptor = Encryptor::with_user_passphrase(secret(passphrase));
     let mut encrypted = encryptor
         .wrap_output(output)
-        .map_err(|error| RustyArchiveError::Age(error.to_string()))?;
+        .map_err(|error| RavencapError::Age(error.to_string()))?;
 
     std::io::copy(&mut input, &mut encrypted)?;
     encrypted
         .finish()
-        .map_err(|error| RustyArchiveError::Age(error.to_string()))?;
+        .map_err(|error| RavencapError::Age(error.to_string()))?;
 
     Ok(())
 }
@@ -38,11 +38,10 @@ pub fn decrypt_stream(
 
     let passphrase = single_passphrase_identity(&identities)?;
     let identity = age::scrypt::Identity::new(secret(passphrase));
-    let decryptor =
-        Decryptor::new(input).map_err(|error| RustyArchiveError::Age(error.to_string()))?;
+    let decryptor = Decryptor::new(input).map_err(|error| RavencapError::Age(error.to_string()))?;
     let mut decrypted = decryptor
         .decrypt(iter::once(&identity as &dyn age::Identity))
-        .map_err(|error| RustyArchiveError::Age(error.to_string()))?;
+        .map_err(|error| RavencapError::Age(error.to_string()))?;
 
     std::io::copy(&mut decrypted, &mut output)?;
 
@@ -52,13 +51,13 @@ pub fn decrypt_stream(
 pub(crate) fn single_passphrase_recipient(recipients: &[Recipient]) -> Result<&str> {
     match recipients {
         [Recipient::Passphrase(passphrase)] => Ok(passphrase),
-        [Recipient::PasswordPrompt] => Err(RustyArchiveError::NotImplemented(
+        [Recipient::PasswordPrompt] => Err(RavencapError::NotImplemented(
             "CLI password prompting must resolve to a passphrase before calling core",
         )),
-        [_] => Err(RustyArchiveError::NotImplemented(
+        [_] => Err(RavencapError::NotImplemented(
             "public-key recipients are not implemented in Phase 0.5",
         )),
-        _ => Err(RustyArchiveError::NotImplemented(
+        _ => Err(RavencapError::NotImplemented(
             "Phase 0.5 supports exactly one passphrase recipient",
         )),
     }
@@ -67,10 +66,10 @@ pub(crate) fn single_passphrase_recipient(recipients: &[Recipient]) -> Result<&s
 fn single_passphrase_identity(identities: &[Identity]) -> Result<&str> {
     match identities {
         [Identity::Passphrase(passphrase)] => Ok(passphrase),
-        [Identity::PrivateKey(_)] => Err(RustyArchiveError::NotImplemented(
+        [Identity::PrivateKey(_)] => Err(RavencapError::NotImplemented(
             "public-key identities are not implemented in Phase 0.5",
         )),
-        _ => Err(RustyArchiveError::NotImplemented(
+        _ => Err(RavencapError::NotImplemented(
             "Phase 0.5 supports exactly one passphrase identity",
         )),
     }

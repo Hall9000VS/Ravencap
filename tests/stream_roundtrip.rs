@@ -1,6 +1,6 @@
 use std::io::{Cursor, Read};
 
-use rustyarchive_core::{EncryptOptions, Identity, Recipient};
+use ravencap_core::{EncryptOptions, Identity, Recipient};
 
 struct ReadOnlyStream(Cursor<Vec<u8>>);
 
@@ -16,7 +16,7 @@ fn phase_0_5_age_streaming_roundtrip_without_seek() {
 	let passphrase = "correct horse battery staple";
 	let mut ciphertext = Vec::new();
 
-	rustyarchive_core::encrypt_stream(
+	ravencap_core::encrypt_stream(
 		plaintext.as_slice(),
 		&mut ciphertext,
 		EncryptOptions::new().recipient(Recipient::passphrase(passphrase)),
@@ -26,7 +26,7 @@ fn phase_0_5_age_streaming_roundtrip_without_seek() {
 	assert!(ciphertext.starts_with(b"age-encryption.org/v1"));
 
 	let mut decrypted = Vec::new();
-	rustyarchive_core::decrypt_stream(
+	ravencap_core::decrypt_stream(
 		ReadOnlyStream(Cursor::new(ciphertext)),
 		&mut decrypted,
 		vec![Identity::passphrase(passphrase)],

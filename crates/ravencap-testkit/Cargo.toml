@@ -1,0 +1,7 @@
+[package]
+name = "ravencap-testkit"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ravencap-format = { path = "../ravencap-format" }

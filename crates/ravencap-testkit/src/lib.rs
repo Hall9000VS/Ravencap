@@ -1,4 +1,4 @@
-use rustyarchive_format::RAVP_MAGIC;
+use ravencap_format::RAVP_MAGIC;
 
 pub fn sample_prelude_magic() -> &'static [u8; 5] {
     RAVP_MAGIC

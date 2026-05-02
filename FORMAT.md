@@ -1,6 +1,6 @@
-# RustyArchive Format Notes
+# Ravencap Format Notes
 
-RustyArchive archives use a standard age-compatible outer file. The decrypted plaintext begins with an RAVP prelude followed by a manifest prefix and a content stream.
+Ravencap archives use a standard age-compatible outer file. The decrypted plaintext begins with an RAVP prelude followed by a manifest prefix and a content stream.
 
 ## Planned Payload Structure
 
@@ -12,4 +12,4 @@ RustyArchive archives use a standard age-compatible outer file. The decrypted pl
 - manifest bytes
 - content stream bytes
 
-The `rustyarchive-format` crate contains the initial constants and structs for this layer.
+The `ravencap-format` crate contains the initial constants and structs for this layer.

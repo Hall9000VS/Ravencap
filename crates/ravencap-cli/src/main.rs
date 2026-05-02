@@ -4,14 +4,10 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
-use rustyarchive_core::{EncryptOptions, Identity, PackOptions, Recipient};
+use ravencap_core::{EncryptOptions, Identity, PackOptions, Recipient};
 
 #[derive(Parser, Debug)]
-#[command(
-    name = "rustyarchive",
-    version,
-    about = "Streaming encrypted archive tool"
-)]
+#[command(name = "ravencap", version, about = "Streaming encrypted archive tool")]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -89,7 +85,7 @@ fn main() -> Result<()> {
             let passphrase = resolve_passphrase(args.passphrase, args.passphrase_file)?;
             let output = open_output(args.output.as_ref())?;
             let options = PackOptions::passphrase(passphrase);
-            rustyarchive_core::pack_path(args.input, output, options)?;
+            ravencap_core::pack_path(args.input, output, options)?;
         }
         Command::Unpack(args) => {
             println!("unpack scaffold ready for input {}", args.input);
@@ -99,17 +95,13 @@ fn main() -> Result<()> {
             let input = open_input(args.input.as_ref())?;
             let output = open_output(args.output.as_ref())?;
             let options = EncryptOptions::new().recipient(Recipient::passphrase(passphrase));
-            rustyarchive_core::encrypt_stream(input, output, options)?;
+            ravencap_core::encrypt_stream(input, output, options)?;
         }
         Command::Decrypt(args) => {
             let passphrase = resolve_passphrase(args.passphrase, args.passphrase_file)?;
             let input = open_input(args.input.as_ref())?;
             let output = open_output(args.output.as_ref())?;
-            rustyarchive_core::decrypt_stream(
-                input,
-                output,
-                vec![Identity::passphrase(passphrase)],
-            )?;
+            ravencap_core::decrypt_stream(input, output, vec![Identity::passphrase(passphrase)])?;
         }
         Command::Info(args) => {
             println!("info scaffold ready for input {}", args.input);

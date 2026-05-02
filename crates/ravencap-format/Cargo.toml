@@ -1,5 +1,5 @@
 [package]
-name = "rustyarchive-format"
+name = "ravencap-format"
 version.workspace = true
 edition.workspace = true
 

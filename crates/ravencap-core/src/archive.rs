@@ -2,14 +2,14 @@ use std::io::{Read, Write};
 use std::path::Path;
 
 use age::Encryptor;
-use rustyarchive_format::{
+use ravencap_format::{
     COMPRESSION_NONE, PAYLOAD_RAW, PAYLOAD_TAR_ARCHIVE, RAVP_VERSION, RavpPrelude,
     parse_prelude_prefix,
 };
 
 use crate::manifest::ArchiveManifest;
 use crate::{
-    Compression, EncryptOptions, PackOptions, Recipient, Result, RustyArchiveError, UnpackOptions,
+    Compression, EncryptOptions, PackOptions, RavencapError, Recipient, Result, UnpackOptions,
 };
 
 pub fn pack_path(path: &Path, output: impl Write, options: PackOptions) -> Result<()> {
@@ -17,7 +17,7 @@ pub fn pack_path(path: &Path, output: impl Write, options: PackOptions) -> Resul
     let encryptor = Encryptor::with_user_passphrase(crate::raw_stream::secret(passphrase));
     let mut encrypted = encryptor
         .wrap_output(output)
-        .map_err(|error| RustyArchiveError::Age(error.to_string()))?;
+        .map_err(|error| RavencapError::Age(error.to_string()))?;
 
     if path == Path::new("-") {
         pack_raw(std::io::stdin().lock(), &mut encrypted)?;
@@ -27,7 +27,7 @@ pub fn pack_path(path: &Path, output: impl Write, options: PackOptions) -> Resul
 
     encrypted
         .finish()
-        .map_err(|error| RustyArchiveError::Age(error.to_string()))?;
+        .map_err(|error| RavencapError::Age(error.to_string()))?;
 
     Ok(())
 }
@@ -39,10 +39,10 @@ pub fn unpack_archive(input: impl Read, _output_dir: &Path, options: UnpackOptio
     let mut cursor = std::io::Cursor::new(decrypted);
     let mut prefix = [0_u8; RavpPrelude::SERIALIZED_LEN];
     cursor.read_exact(&mut prefix)?;
-    let _prelude = parse_prelude_prefix(&prefix)
-        .map_err(|error| RustyArchiveError::Format(error.to_string()))?;
+    let _prelude =
+        parse_prelude_prefix(&prefix).map_err(|error| RavencapError::Format(error.to_string()))?;
 
-    Err(RustyArchiveError::NotImplemented(
+    Err(RavencapError::NotImplemented(
         "archive extraction is planned after the Phase 0.5 pack/encrypt gate",
     ))
 }
@@ -67,7 +67,7 @@ fn pack_tar(path: &Path, mut output: impl Write) -> Result<()> {
     } else {
         let name = path
             .file_name()
-            .ok_or_else(|| RustyArchiveError::InvalidPath(path.display().to_string()))?;
+            .ok_or_else(|| RavencapError::InvalidPath(path.display().to_string()))?;
         builder.append_path_with_name(path, name)?;
     }
 

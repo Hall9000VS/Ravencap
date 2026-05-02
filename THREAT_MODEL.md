@@ -1,6 +1,6 @@
 # Threat Model
 
-RustyArchive is intended to provide a standard age-compatible encrypted envelope around a streaming RustyArchive payload.
+Ravencap is intended to provide a standard age-compatible encrypted envelope around a streaming Ravencap payload.
 
 ## Protects Against
 
