@@ -19,10 +19,10 @@ From the repository root:
 ```powershell
 cargo run -p ravencap-cli -- keygen -o tests/vectors/identity/alice.ravkey --overwrite
 cargo run -p ravencap-cli -- pubkey tests/vectors/identity/alice.ravkey -o tests/vectors/identity/alice.ravpub --overwrite
-cargo run -p ravencap-cli -- pack --passphrase ravencap-test-vector tests/vectors/source/project -o tests/vectors/archive-default.rav --overwrite
+cargo run -p ravencap-cli -- pack --passphrase-file tests/vectors/passphrase.txt tests/vectors/source/project -o tests/vectors/archive-default.rav --overwrite
 cargo run -p ravencap-cli -- pack -r (Get-Content tests/vectors/identity/alice.ravpub -Raw).Trim() tests/vectors/source/project -o tests/vectors/archive-public-key.rav --overwrite
-cargo run -p ravencap-cli -- encrypt --passphrase ravencap-test-vector -i tests/vectors/source/non-ravp.txt -o tests/vectors/non-ravp-age.rav --overwrite
-$inspect = cargo run -p ravencap-cli -- inspect tests/vectors/archive-default.rav --passphrase ravencap-test-vector --json
+cargo run -p ravencap-cli -- encrypt --passphrase-file tests/vectors/passphrase.txt -i tests/vectors/source/non-ravp.txt -o tests/vectors/non-ravp-age.rav --overwrite
+$inspect = cargo run -p ravencap-cli -- inspect tests/vectors/archive-default.rav --passphrase-file tests/vectors/passphrase.txt --json
 Set-Content tests/vectors/inspect/archive-default.json ($inspect -join [Environment]::NewLine)
 ```
 

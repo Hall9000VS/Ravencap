@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 - 2026-05-02
+
+- Fixed archive manifest `path_encoding` to the v1 canonical `utf-8-nfc-forward-slash` value.
+- Accepted standard age identity files with comment lines when deriving public keys or decrypting.
+- Rejected `.` as a whole symlink target and added a regression test.
+- Avoided creating a missing unpack parent directory before archive authentication and verification succeeds.
+- Replaced inline `--passphrase` CLI usage with `--passphrase-file`, prompt mode, or explicit `--insecure-passphrase-cli` for controlled tests.
+
 ## 1.0.0 - 2026-05-02
 
 - Initialized the Ravencap workspace, crate layout, docs skeleton, and CI scaffold.

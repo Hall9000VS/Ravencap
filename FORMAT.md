@@ -32,7 +32,7 @@ The manifest is UTF-8 JSON with this top-level shape:
 ```json
 {
   "version": 1,
-  "path_encoding": "utf-8",
+  "path_encoding": "utf-8-nfc-forward-slash",
   "entries": []
 }
 ```

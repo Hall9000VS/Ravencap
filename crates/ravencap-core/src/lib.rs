@@ -92,7 +92,6 @@ mod raw_stream;
 
 use std::io::{Read, Write};
 use std::path::Path;
-use std::str::FromStr;
 
 use age::secrecy::ExposeSecret;
 pub use error::{RavencapError, Result};
@@ -293,7 +292,6 @@ pub fn generate_private_key() -> String {
 }
 
 pub fn public_key_from_private_key(private_key: &str) -> Result<String> {
-    let identity = age::x25519::Identity::from_str(private_key.trim())
-        .map_err(|error| RavencapError::Key(error.to_string()))?;
+    let identity = raw_stream::first_private_key_from_text(private_key)?;
     Ok(identity.to_public().to_string())
 }

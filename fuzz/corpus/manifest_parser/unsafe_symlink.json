@@ -1,1 +1,1 @@
-{"version":1,"path_encoding":"utf-8","entries":[{"type":"directory","path":"project"},{"type":"symlink","path":"project/link","target":"../outside"}]}
+{"version":1,"path_encoding":"utf-8-nfc-forward-slash","entries":[{"type":"directory","path":"project"},{"type":"symlink","path":"project/link","target":"../outside"}]}

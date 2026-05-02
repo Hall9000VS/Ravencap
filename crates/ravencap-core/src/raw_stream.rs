@@ -95,19 +95,52 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
 }
 
 pub(crate) fn age_identities(identities: &[Identity]) -> Result<Vec<Box<dyn age::Identity>>> {
-    identities
-        .iter()
-        .map(|identity| match identity {
+    let mut parsed = Vec::new();
+
+    for identity in identities {
+        match identity {
             Identity::Passphrase(passphrase) => {
-                Ok(Box::new(age::scrypt::Identity::new(secret(passphrase)))
-                    as Box<dyn age::Identity>)
+                parsed.push(Box::new(age::scrypt::Identity::new(secret(passphrase)))
+                    as Box<dyn age::Identity>);
             }
-            Identity::PrivateKey(private_key) => Ok(Box::new(
-                age::x25519::Identity::from_str(private_key.trim())
-                    .map_err(|error| RavencapError::Key(error.to_string()))?,
-            ) as Box<dyn age::Identity>),
-        })
-        .collect()
+            Identity::PrivateKey(private_key) => {
+                for private_key in private_key_lines(private_key)? {
+                    parsed.push(Box::new(private_key) as Box<dyn age::Identity>);
+                }
+            }
+        }
+    }
+
+    Ok(parsed)
+}
+
+pub(crate) fn first_private_key_from_text(value: &str) -> Result<age::x25519::Identity> {
+    private_key_lines(value)?.into_iter().next().ok_or_else(|| {
+        RavencapError::Key("identity file does not contain an age secret key".to_string())
+    })
+}
+
+fn private_key_lines(value: &str) -> Result<Vec<age::x25519::Identity>> {
+    let mut parsed = Vec::new();
+
+    for line in value.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        parsed.push(
+            age::x25519::Identity::from_str(line)
+                .map_err(|error| RavencapError::Key(error.to_string()))?,
+        );
+    }
+
+    if parsed.is_empty() {
+        return Err(RavencapError::Key(
+            "identity file does not contain an age secret key".to_string(),
+        ));
+    }
+
+    Ok(parsed)
 }
 
 pub(crate) fn secret(value: &str) -> SecretString {

@@ -36,7 +36,7 @@ fn invalid_manifest_json_is_rejected() {
     let archive = encrypted_ravp_plaintext(
         PAYLOAD_TAR_ARCHIVE,
         COMPRESSION_NONE,
-        br#"{"version":1,"path_encoding":"utf-8","entries":["#.to_vec(),
+        br#"{"version":1,"path_encoding":"utf-8-nfc-forward-slash","entries":["#.to_vec(),
         vec![0_u8; 1024],
     );
 
@@ -58,7 +58,7 @@ fn invalid_manifest_json_is_rejected() {
 fn duplicate_manifest_paths_are_rejected() {
     let archive = encrypted_archive_from_manifest(ArchiveManifest {
         version: 1,
-        path_encoding: "utf-8".to_string(),
+        path_encoding: "utf-8-nfc-forward-slash".to_string(),
         entries: vec![
             ManifestEntry::File {
                 path: "project/a.txt".to_string(),
@@ -80,7 +80,7 @@ fn duplicate_manifest_paths_are_rejected() {
 fn traversal_manifest_paths_are_rejected() {
     let archive = encrypted_archive_from_manifest(ArchiveManifest {
         version: 1,
-        path_encoding: "utf-8".to_string(),
+        path_encoding: "utf-8-nfc-forward-slash".to_string(),
         entries: vec![ManifestEntry::File {
             path: "project/../escape.txt".to_string(),
             size: 0,
@@ -95,7 +95,7 @@ fn traversal_manifest_paths_are_rejected() {
 fn unsafe_manifest_symlinks_are_rejected() {
     let archive = encrypted_archive_from_manifest(ArchiveManifest {
         version: 1,
-        path_encoding: "utf-8".to_string(),
+        path_encoding: "utf-8-nfc-forward-slash".to_string(),
         entries: vec![
             ManifestEntry::Directory {
                 path: "project".to_string(),
@@ -114,7 +114,7 @@ fn unsafe_manifest_symlinks_are_rejected() {
 fn traversal_tar_entry_paths_are_rejected() {
     let manifest = ArchiveManifest {
         version: 1,
-        path_encoding: "utf-8".to_string(),
+        path_encoding: "utf-8-nfc-forward-slash".to_string(),
         entries: vec![ManifestEntry::File {
             path: "project/file.txt".to_string(),
             size: 0,

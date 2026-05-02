@@ -17,7 +17,7 @@ fn tar_archive_manifest_records_directories_files_sizes_and_hashes() {
     let manifest = ArchiveManifest::tar_archive(&root).expect("manifest");
 
     assert_eq!(manifest.version, 1);
-    assert_eq!(manifest.path_encoding, "utf-8");
+    assert_eq!(manifest.path_encoding, "utf-8-nfc-forward-slash");
     assert!(manifest.entries.contains(&ManifestEntry::Directory {
         path: "project".to_string()
     }));
@@ -194,12 +194,40 @@ fn failed_unpack_does_not_commit_output_directory() {
 }
 
 #[test]
+fn failed_unpack_does_not_create_missing_parent_directory() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let file = tempdir.path().join("payload.txt");
+    let parent = tempdir.path().join("missing-parent");
+    let output = parent.join("restored");
+
+    std::fs::write(&file, b"payload").expect("write file");
+
+    let mut archive = Vec::new();
+    ravencap_core::pack_path(
+        &file,
+        &mut archive,
+        PackOptions::new().recipient(Recipient::passphrase("correct")),
+    )
+    .expect("pack archive");
+
+    let result = ravencap_core::unpack_archive(
+        archive.as_slice(),
+        &output,
+        UnpackOptions::new().identity(Identity::passphrase("wrong")),
+    );
+
+    assert!(result.is_err());
+    assert!(!parent.exists());
+    assert!(!output.exists());
+}
+
+#[test]
 fn malicious_archive_path_traversal_is_rejected() {
     let tempdir = tempfile::tempdir().expect("tempdir");
     let output = tempdir.path().join("restored");
     let archive = encrypted_archive_from_manifest(ArchiveManifest {
         version: 1,
-        path_encoding: "utf-8".to_string(),
+        path_encoding: "utf-8-nfc-forward-slash".to_string(),
         entries: vec![ManifestEntry::File {
             path: "project/../escape.txt".to_string(),
             size: 0,
@@ -232,7 +260,7 @@ fn malicious_archive_unsafe_symlink_is_rejected() {
     let output = tempdir.path().join("restored");
     let archive = encrypted_archive_from_manifest(ArchiveManifest {
         version: 1,
-        path_encoding: "utf-8".to_string(),
+        path_encoding: "utf-8-nfc-forward-slash".to_string(),
         entries: vec![
             ManifestEntry::Directory {
                 path: "project".to_string(),
@@ -298,6 +326,7 @@ fn symlink_target_validation_allows_only_targets_inside_archive_root() {
         ravencap_core::paths::validate_relative_symlink_target("project/link", "cafe\u{301}.txt")
             .is_err()
     );
+    assert!(ravencap_core::paths::validate_relative_symlink_target("project/link", ".").is_err());
 }
 
 #[cfg(unix)]

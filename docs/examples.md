@@ -5,17 +5,17 @@ These examples use commands covered by integration tests or note their external 
 Password-mode raw stream encryption:
 
 ```sh
-ravencap encrypt --passphrase "test" -i payload.ravp -o payload.rav
-ravencap decrypt --passphrase "test" -i payload.rav -o payload.ravp
+ravencap encrypt --passphrase-file passphrase.txt -i payload.ravp -o payload.rav
+ravencap decrypt --passphrase-file passphrase.txt -i payload.rav -o payload.ravp
 ```
 
 Password-mode archive pack, inspect, verify, and unpack:
 
 ```sh
-ravencap pack --passphrase "test" ./folder -o folder.rav
-ravencap inspect folder.rav --passphrase "test"
-ravencap verify folder.rav --passphrase "test"
-ravencap unpack folder.rav --passphrase "test" -o restored-folder
+ravencap pack --passphrase-file passphrase.txt ./folder -o folder.rav
+ravencap inspect folder.rav --passphrase-file passphrase.txt
+ravencap verify folder.rav --passphrase-file passphrase.txt
+ravencap unpack folder.rav --passphrase-file passphrase.txt -o restored-folder
 ```
 
 Public-key archive pack and unpack:
@@ -30,16 +30,16 @@ ravencap unpack folder.rav --identity alice.ravkey -o restored-folder
 Inspect JSON and quick/full verification:
 
 ```sh
-ravencap inspect folder.rav --passphrase "test" --json
-ravencap verify --quick folder.rav --passphrase "test"
-ravencap verify folder.rav --passphrase "test" --json
+ravencap inspect folder.rav --passphrase-file passphrase.txt --json
+ravencap verify --quick folder.rav --passphrase-file passphrase.txt
+ravencap verify folder.rav --passphrase-file passphrase.txt --json
 ```
 
 Stdin and stdout pipeline usage for raw streams:
 
 ```sh
-ravencap encrypt --passphrase "test" < payload.ravp > payload.rav
-ravencap decrypt --passphrase "test" < payload.rav > payload.ravp
+ravencap encrypt --passphrase-file passphrase.txt < payload.ravp > payload.rav
+ravencap decrypt --passphrase-file passphrase.txt < payload.rav > payload.ravp
 ```
 
 Age/rage interop smoke check for the public-key vector:
@@ -53,15 +53,15 @@ The script is optional and skips whichever of `age` or `rage` is not installed.
 Reading archive input from stdin:
 
 ```sh
-ravencap verify --quick - --passphrase "test" < folder.rav
-ravencap inspect - --passphrase "test" --json < folder.rav
+ravencap verify --quick - --passphrase-file passphrase.txt < folder.rav
+ravencap inspect - --passphrase-file passphrase.txt --json < folder.rav
 ```
 
 Managed outputs and shell redirection:
 
 ```sh
-ravencap decrypt --passphrase "test" -i payload.rav -o payload.ravp --overwrite
-ravencap decrypt --passphrase "test" < payload.rav > payload.ravp
+ravencap decrypt --passphrase-file passphrase.txt -i payload.rav -o payload.ravp --overwrite
+ravencap decrypt --passphrase-file passphrase.txt < payload.rav > payload.ravp
 ```
 
 The `-o` form is managed by Ravencap and writes through a same-directory temporary file. The redirected form is managed by the shell and can leave a partial output file if the command is interrupted or fails after the shell creates the destination.

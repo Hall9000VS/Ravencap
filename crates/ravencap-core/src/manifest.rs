@@ -10,6 +10,8 @@ use walkdir::WalkDir;
 use crate::paths::{validate_relative_archive_path, validate_relative_symlink_target};
 use crate::{RavencapError, Result};
 
+pub const PATH_ENCODING_UTF8_NFC_FORWARD_SLASH: &str = "utf-8-nfc-forward-slash";
+
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct ArchiveManifest {
     pub version: u8,
@@ -21,7 +23,7 @@ impl ArchiveManifest {
     pub fn raw_stream() -> Self {
         Self {
             version: 1,
-            path_encoding: "utf-8".to_string(),
+            path_encoding: PATH_ENCODING_UTF8_NFC_FORWARD_SLASH.to_string(),
             entries: Vec::new(),
         }
     }
@@ -31,7 +33,7 @@ impl ArchiveManifest {
 
         Ok(Self {
             version: 1,
-            path_encoding: "utf-8".to_string(),
+            path_encoding: PATH_ENCODING_UTF8_NFC_FORWARD_SLASH.to_string(),
             entries,
         })
     }

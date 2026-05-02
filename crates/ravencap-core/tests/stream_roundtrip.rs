@@ -10,6 +10,15 @@ impl Read for ReadOnlyStream {
     }
 }
 
+struct TinyChunkStream(Cursor<Vec<u8>>);
+
+impl Read for TinyChunkStream {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let limit = buf.len().min(7);
+        self.0.read(&mut buf[..limit])
+    }
+}
+
 #[test]
 fn phase_0_5_age_streaming_roundtrip_without_seek() {
     let plaintext = b"RAVP\0\x01\x01\0\0\0\0\0\0\0\0\0stream payload";
@@ -62,6 +71,36 @@ fn public_key_streaming_roundtrip() {
 }
 
 #[test]
+fn public_key_identity_file_with_age_comments_roundtrips() {
+    let private_key = ravencap_core::generate_private_key();
+    let public_key = ravencap_core::public_key_from_private_key(&format!(
+        "# created: test\n# public key: ignored\n{private_key}\n"
+    ))
+    .expect("public key from commented identity file");
+    let plaintext = b"commented identity payload";
+    let mut ciphertext = Vec::new();
+
+    ravencap_core::encrypt_stream(
+        plaintext.as_slice(),
+        &mut ciphertext,
+        EncryptOptions::new().recipient(Recipient::public_key(public_key)),
+    )
+    .expect("encrypt to public key");
+
+    let mut decrypted = Vec::new();
+    ravencap_core::decrypt_stream(
+        ReadOnlyStream(Cursor::new(ciphertext)),
+        &mut decrypted,
+        vec![Identity::private_key(format!(
+            "# created: test\n# public key: ignored\n{private_key}\n"
+        ))],
+    )
+    .expect("decrypt with commented private key");
+
+    assert_eq!(decrypted, plaintext);
+}
+
+#[test]
 fn large_raw_stream_roundtrips_without_seek() {
     let mut plaintext = Vec::with_capacity(8 * 1024 * 1024);
     for index in 0..plaintext.capacity() {
@@ -84,6 +123,33 @@ fn large_raw_stream_roundtrips_without_seek() {
         vec![Identity::passphrase(passphrase)],
     )
     .expect("decrypt large stream");
+
+    assert_eq!(decrypted, plaintext);
+}
+
+#[test]
+fn large_raw_stream_decrypts_from_tiny_non_seek_chunks() {
+    let mut plaintext = Vec::with_capacity(16 * 1024 * 1024);
+    for index in 0..plaintext.capacity() {
+        plaintext.push((index % 251) as u8);
+    }
+
+    let passphrase = "large stream chunked release candidate";
+    let mut ciphertext = Vec::new();
+    ravencap_core::encrypt_stream(
+        plaintext.as_slice(),
+        &mut ciphertext,
+        EncryptOptions::new().recipient(Recipient::passphrase(passphrase)),
+    )
+    .expect("encrypt large stream");
+
+    let mut decrypted = Vec::new();
+    ravencap_core::decrypt_stream(
+        TinyChunkStream(Cursor::new(ciphertext)),
+        &mut decrypted,
+        vec![Identity::passphrase(passphrase)],
+    )
+    .expect("decrypt large stream from tiny chunks");
 
     assert_eq!(decrypted, plaintext);
 }

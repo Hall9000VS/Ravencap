@@ -28,7 +28,7 @@ fn raw_ravp_plaintext_vector_has_stable_prelude_manifest_and_payload() {
         serde_json::from_slice(&RAW_NONE_RAVP[manifest_start..manifest_end])
             .expect("parse raw manifest");
     assert_eq!(manifest.version, 1);
-    assert_eq!(manifest.path_encoding, "utf-8");
+    assert_eq!(manifest.path_encoding, "utf-8-nfc-forward-slash");
     assert!(manifest.entries.is_empty());
     assert_eq!(&RAW_NONE_RAVP[manifest_end..], b"raw vector payload\n");
 }

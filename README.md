@@ -13,9 +13,9 @@ Ravencap is focused on encrypted files, folders, and pipelines. It does not mana
 ## Quick Start
 
 ```sh
-ravencap pack --passphrase "test" ./folder -o folder.rav
-ravencap verify folder.rav --passphrase "test"
-ravencap unpack folder.rav --passphrase "test" -o restored-folder
+ravencap pack --passphrase-file passphrase.txt ./folder -o folder.rav
+ravencap verify folder.rav --passphrase-file passphrase.txt
+ravencap unpack folder.rav --passphrase-file passphrase.txt -o restored-folder
 ```
 
 ## Usage
@@ -23,10 +23,10 @@ ravencap unpack folder.rav --passphrase "test" -o restored-folder
 Password mode:
 
 ```sh
-ravencap encrypt --passphrase "test" -i payload.ravp -o payload.rav
-ravencap decrypt --passphrase "test" -i payload.rav -o payload.ravp
-ravencap pack --passphrase "test" ./folder -o folder.rav
-ravencap unpack folder.rav --passphrase "test" -o restored-folder
+ravencap encrypt --passphrase-file passphrase.txt -i payload.ravp -o payload.rav
+ravencap decrypt --passphrase-file passphrase.txt -i payload.rav -o payload.ravp
+ravencap pack --passphrase-file passphrase.txt ./folder -o folder.rav
+ravencap unpack folder.rav --passphrase-file passphrase.txt -o restored-folder
 ```
 
 Public-key mode:
@@ -40,7 +40,7 @@ ravencap pack -r $(cat alice.ravpub) ./folder -o folder.rav
 ravencap unpack folder.rav --identity alice.ravkey -o restored-folder
 ```
 
-Use `--passphrase-file` for scripted local tests where prompting is not practical. Private-key identity files passed with `--identity` are read as age secret keys.
+Use `--passphrase-file` for scripted local tests where prompting is not practical. Omit passphrase options to use the interactive prompt. Private-key identity files passed with `--identity` are read as age secret keys, including standard age identity files with comment lines.
 
 Age/rage interop:
 
@@ -58,11 +58,11 @@ Public metadata check:
 
 ```sh
 ravencap info payload.rav
-ravencap inspect payload.rav --passphrase "test"
-ravencap inspect payload.rav --passphrase "test" --json
-ravencap verify --quick payload.rav --passphrase "test"
-ravencap verify payload.rav --passphrase "test"
-ravencap verify payload.rav --passphrase "test" --json
+ravencap inspect payload.rav --passphrase-file passphrase.txt
+ravencap inspect payload.rav --passphrase-file passphrase.txt --json
+ravencap verify --quick payload.rav --passphrase-file passphrase.txt
+ravencap verify payload.rav --passphrase-file passphrase.txt
+ravencap verify payload.rav --passphrase-file passphrase.txt --json
 ```
 
 `info` only checks the public age header. `inspect` decrypts the RAVP prelude and manifest prefix, but does not verify the content stream. `verify --quick` authenticates the full outer age stream without archive semantics. Full `verify` authenticates the age stream, parses/decompresses the TAR payload, and validates manifest checksums.
@@ -70,11 +70,11 @@ ravencap verify payload.rav --passphrase "test" --json
 Stdin/stdout raw stream usage:
 
 ```sh
-ravencap encrypt --passphrase "test" < payload.ravp > payload.rav
-ravencap decrypt --passphrase "test" < payload.rav > payload.ravp
+ravencap encrypt --passphrase-file passphrase.txt < payload.ravp > payload.rav
+ravencap decrypt --passphrase-file passphrase.txt < payload.rav > payload.ravp
 ```
 
-Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Use `-` as the archive input path for commands such as `inspect`, `verify`, and `unpack` when reading from stdin. Omit `--passphrase` to be prompted.
+Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Use `-` as the archive input path for commands such as `inspect`, `verify`, and `unpack` when reading from stdin. Omit passphrase options to be prompted. `--insecure-passphrase-cli` exists only for controlled tests and prints a warning because command-line secrets can appear in process listings and shell history.
 
 ## Output Safety
 

@@ -70,6 +70,7 @@ pub fn validate_relative_symlink_target(link_path: &str, target: &str) -> Result
         .ok_or_else(|| RavencapError::InvalidPath(link_path.to_string()))?;
 
     if target.is_empty()
+        || target == "."
         || target.starts_with('/')
         || target.contains('\\')
         || target.contains(':')

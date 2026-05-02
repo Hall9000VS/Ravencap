@@ -34,7 +34,7 @@ The manifest is UTF-8 JSON immediately after the prelude. It has this top-level 
 ```json
 {
   "version": 1,
-  "path_encoding": "utf-8",
+  "path_encoding": "utf-8-nfc-forward-slash",
   "entries": []
 }
 ```

@@ -10,7 +10,7 @@ use ravencap_format::{
 };
 use sha2::{Digest, Sha256};
 
-use crate::manifest::{ArchiveManifest, ManifestEntry};
+use crate::manifest::{ArchiveManifest, ManifestEntry, PATH_ENCODING_UTF8_NFC_FORWARD_SLASH};
 use crate::{
     Compression, EncryptOptions, Identity, PackOptions, RavencapError, Recipient, Result,
     UnpackOptions, VerifyReport,
@@ -44,18 +44,30 @@ pub fn unpack_archive(input: impl Read, output_dir: &Path, options: UnpackOption
     }
 
     let parent = output_dir.parent().unwrap_or_else(|| Path::new("."));
-    std::fs::create_dir_all(parent)?;
+    let temp_parent = nearest_existing_parent(parent);
     let temp_dir = tempfile::Builder::new()
         .prefix(".ravencap-unpack-")
-        .tempdir_in(parent)?;
+        .tempdir_in(temp_parent)?;
 
     with_decrypted_archive(input, &options.identities, |decrypted| {
         read_verified_tar_archive(decrypted, Some(temp_dir.path()))
     })?;
 
+    std::fs::create_dir_all(parent)?;
     let temp_path = temp_dir.keep();
     std::fs::rename(temp_path, output_dir)?;
     Ok(())
+}
+
+fn nearest_existing_parent(path: &Path) -> &Path {
+    let mut candidate = path;
+    while !candidate.exists() {
+        match candidate.parent() {
+            Some(parent) => candidate = parent,
+            None => return Path::new("."),
+        }
+    }
+    candidate
 }
 
 pub(crate) fn verify_archive_contents(
@@ -200,7 +212,7 @@ fn validate_manifest(manifest: &ArchiveManifest) -> Result<HashMap<String, Expec
         )));
     }
 
-    if manifest.path_encoding != "utf-8" {
+    if manifest.path_encoding != PATH_ENCODING_UTF8_NFC_FORWARD_SLASH {
         return Err(RavencapError::Format(format!(
             "unsupported path encoding: {}",
             manifest.path_encoding

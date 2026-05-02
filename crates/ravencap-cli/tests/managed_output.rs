@@ -32,7 +32,7 @@ fn failed_decrypt_preserves_existing_overwrite_target() {
     fs::write(&output, "existing output").expect("seed output");
 
     let encrypt_status = ravencap()
-        .args(["encrypt", "--passphrase", "correct", "-i"])
+        .args(["encrypt", "--insecure-passphrase-cli", "correct", "-i"])
         .arg(&plaintext)
         .args(["-o"])
         .arg(&ciphertext)
@@ -41,7 +41,7 @@ fn failed_decrypt_preserves_existing_overwrite_target() {
     assert!(encrypt_status.success());
 
     let decrypt_status = ravencap()
-        .args(["decrypt", "--passphrase", "wrong", "-i"])
+        .args(["decrypt", "--insecure-passphrase-cli", "wrong", "-i"])
         .arg(&ciphertext)
         .args(["-o"])
         .arg(&output)
@@ -65,7 +65,7 @@ fn info_reports_only_public_age_header() {
     fs::write(&plaintext, "secret payload").expect("seed plaintext");
 
     let encrypt_status = ravencap()
-        .args(["encrypt", "--passphrase", "correct", "-i"])
+        .args(["encrypt", "--insecure-passphrase-cli", "correct", "-i"])
         .arg(&plaintext)
         .args(["-o"])
         .arg(&ciphertext)
@@ -96,7 +96,7 @@ fn quick_verify_authenticates_encrypted_stream() {
     fs::write(&plaintext, "secret payload").expect("seed plaintext");
 
     let encrypt_status = ravencap()
-        .args(["encrypt", "--passphrase", "correct", "-i"])
+        .args(["encrypt", "--insecure-passphrase-cli", "correct", "-i"])
         .arg(&plaintext)
         .args(["-o"])
         .arg(&ciphertext)
@@ -107,7 +107,7 @@ fn quick_verify_authenticates_encrypted_stream() {
     let output = ravencap()
         .args(["verify", "--quick"])
         .arg(&ciphertext)
-        .args(["--passphrase", "correct"])
+        .args(["--insecure-passphrase-cli", "correct"])
         .output()
         .expect("run quick verify");
 
@@ -126,7 +126,7 @@ fn quick_verify_json_reports_unverified_manifest_and_checksums() {
     fs::write(&plaintext, "secret payload").expect("seed plaintext");
 
     let encrypt_status = ravencap()
-        .args(["encrypt", "--passphrase", "correct", "-i"])
+        .args(["encrypt", "--insecure-passphrase-cli", "correct", "-i"])
         .arg(&plaintext)
         .args(["-o"])
         .arg(&ciphertext)
@@ -137,7 +137,7 @@ fn quick_verify_json_reports_unverified_manifest_and_checksums() {
     let output = ravencap()
         .args(["verify", "--quick", "--json"])
         .arg(&ciphertext)
-        .args(["--passphrase", "correct"])
+        .args(["--insecure-passphrase-cli", "correct"])
         .output()
         .expect("run quick verify json");
 
@@ -157,7 +157,7 @@ fn quick_verify_fails_with_wrong_passphrase() {
     fs::write(&plaintext, "secret payload").expect("seed plaintext");
 
     let encrypt_status = ravencap()
-        .args(["encrypt", "--passphrase", "correct", "-i"])
+        .args(["encrypt", "--insecure-passphrase-cli", "correct", "-i"])
         .arg(&plaintext)
         .args(["-o"])
         .arg(&ciphertext)
@@ -168,7 +168,7 @@ fn quick_verify_fails_with_wrong_passphrase() {
     let output = ravencap()
         .args(["verify", "--quick"])
         .arg(&ciphertext)
-        .args(["--passphrase", "wrong"])
+        .args(["--insecure-passphrase-cli", "wrong"])
         .output()
         .expect("run quick verify");
 
@@ -186,7 +186,7 @@ fn inspect_prints_warning_and_manifest_prefix_details() {
     fs::write(&file, "archive payload").expect("seed file");
 
     let pack_status = ravencap()
-        .args(["pack", "--passphrase", "correct"])
+        .args(["pack", "--insecure-passphrase-cli", "correct"])
         .arg(&folder)
         .args(["-o"])
         .arg(&archive)
@@ -197,7 +197,7 @@ fn inspect_prints_warning_and_manifest_prefix_details() {
     let output = ravencap()
         .arg("inspect")
         .arg(&archive)
-        .args(["--passphrase", "correct"])
+        .args(["--insecure-passphrase-cli", "correct"])
         .output()
         .expect("run inspect");
 
@@ -225,7 +225,7 @@ fn inspect_json_marks_content_stream_unverified() {
     fs::write(&file, "raw payload").expect("seed file");
 
     let pack_status = ravencap()
-        .args(["pack", "--passphrase", "correct"])
+        .args(["pack", "--insecure-passphrase-cli", "correct"])
         .arg(&folder)
         .args(["-o"])
         .arg(&archive)
@@ -236,7 +236,7 @@ fn inspect_json_marks_content_stream_unverified() {
     let output = ravencap()
         .arg("inspect")
         .arg(&archive)
-        .args(["--passphrase", "correct", "--json"])
+        .args(["--insecure-passphrase-cli", "correct", "--json"])
         .output()
         .expect("run inspect json");
 
@@ -259,7 +259,7 @@ fn unpack_restores_packed_folder() {
     fs::write(&file, "archive payload").expect("seed file");
 
     let pack_status = ravencap()
-        .args(["pack", "--passphrase", "correct"])
+        .args(["pack", "--insecure-passphrase-cli", "correct"])
         .arg(&folder)
         .args(["-o"])
         .arg(&archive)
@@ -270,7 +270,7 @@ fn unpack_restores_packed_folder() {
     let unpack_status = ravencap()
         .arg("unpack")
         .arg(&archive)
-        .args(["--passphrase", "correct", "-o"])
+        .args(["--insecure-passphrase-cli", "correct", "-o"])
         .arg(&output)
         .status()
         .expect("run unpack");
@@ -293,7 +293,7 @@ fn full_verify_reports_manifest_and_checksum_validation() {
     fs::write(&file, "archive payload").expect("seed file");
 
     let pack_status = ravencap()
-        .args(["pack", "--passphrase", "correct"])
+        .args(["pack", "--insecure-passphrase-cli", "correct"])
         .arg(&folder)
         .args(["-o"])
         .arg(&archive)
@@ -304,7 +304,7 @@ fn full_verify_reports_manifest_and_checksum_validation() {
     let output = ravencap()
         .arg("verify")
         .arg(&archive)
-        .args(["--passphrase", "correct"])
+        .args(["--insecure-passphrase-cli", "correct"])
         .output()
         .expect("run full verify");
 
@@ -325,7 +325,7 @@ fn full_verify_json_reports_manifest_and_checksum_validation() {
     fs::write(&file, "archive payload").expect("seed file");
 
     let pack_status = ravencap()
-        .args(["pack", "--passphrase", "correct"])
+        .args(["pack", "--insecure-passphrase-cli", "correct"])
         .arg(&folder)
         .args(["-o"])
         .arg(&archive)
@@ -336,7 +336,7 @@ fn full_verify_json_reports_manifest_and_checksum_validation() {
     let output = ravencap()
         .arg("verify")
         .arg(&archive)
-        .args(["--passphrase", "correct", "--json"])
+        .args(["--insecure-passphrase-cli", "correct", "--json"])
         .output()
         .expect("run full verify json");
 

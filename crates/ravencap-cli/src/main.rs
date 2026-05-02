@@ -51,8 +51,8 @@ struct PackCommand {
     #[arg(long)]
     overwrite: bool,
 
-    #[arg(long)]
-    passphrase: Option<String>,
+    #[arg(long = "insecure-passphrase-cli")]
+    insecure_passphrase_cli: Option<String>,
 
     #[arg(long)]
     passphrase_file: Option<PathBuf>,
@@ -68,8 +68,8 @@ struct UnpackCommand {
     #[arg(short, long)]
     output: PathBuf,
 
-    #[arg(long)]
-    passphrase: Option<String>,
+    #[arg(long = "insecure-passphrase-cli")]
+    insecure_passphrase_cli: Option<String>,
 
     #[arg(long)]
     passphrase_file: Option<PathBuf>,
@@ -89,8 +89,8 @@ struct CryptoCommand {
     #[arg(long)]
     overwrite: bool,
 
-    #[arg(long)]
-    passphrase: Option<String>,
+    #[arg(long = "insecure-passphrase-cli")]
+    insecure_passphrase_cli: Option<String>,
 
     #[arg(long)]
     passphrase_file: Option<PathBuf>,
@@ -112,8 +112,8 @@ struct VerifyCommand {
     #[arg(long)]
     json: bool,
 
-    #[arg(long)]
-    passphrase: Option<String>,
+    #[arg(long = "insecure-passphrase-cli")]
+    insecure_passphrase_cli: Option<String>,
 
     #[arg(long)]
     passphrase_file: Option<PathBuf>,
@@ -135,8 +135,8 @@ struct InspectCommand {
     #[arg(long)]
     json: bool,
 
-    #[arg(long)]
-    passphrase: Option<String>,
+    #[arg(long = "insecure-passphrase-cli")]
+    insecure_passphrase_cli: Option<String>,
 
     #[arg(long)]
     passphrase_file: Option<PathBuf>,
@@ -159,8 +159,11 @@ fn main() -> Result<()> {
 
     match cli.command {
         Command::Pack(args) => {
-            let recipients =
-                resolve_recipients(args.passphrase, args.passphrase_file, args.recipients)?;
+            let recipients = resolve_recipients(
+                args.insecure_passphrase_cli,
+                args.passphrase_file,
+                args.recipients,
+            )?;
             let options = recipients
                 .into_iter()
                 .fold(PackOptions::new(), |options, recipient| {
@@ -171,8 +174,11 @@ fn main() -> Result<()> {
             })?;
         }
         Command::Unpack(args) => {
-            let identities =
-                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
+            let identities = resolve_identities(
+                args.insecure_passphrase_cli,
+                args.passphrase_file,
+                args.identities,
+            )?;
             let input = open_command_input(&args.input)?;
             let options = identities
                 .into_iter()
@@ -182,8 +188,11 @@ fn main() -> Result<()> {
             ravencap_core::unpack_archive(input, args.output, options)?;
         }
         Command::Encrypt(args) => {
-            let recipients =
-                resolve_recipients(args.passphrase, args.passphrase_file, args.recipients)?;
+            let recipients = resolve_recipients(
+                args.insecure_passphrase_cli,
+                args.passphrase_file,
+                args.recipients,
+            )?;
             let input = open_input(args.input.as_ref())?;
             let options = recipients
                 .into_iter()
@@ -195,8 +204,11 @@ fn main() -> Result<()> {
             })?;
         }
         Command::Decrypt(args) => {
-            let identities =
-                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
+            let identities = resolve_identities(
+                args.insecure_passphrase_cli,
+                args.passphrase_file,
+                args.identities,
+            )?;
             let input = open_input(args.input.as_ref())?;
             with_output(args.output.as_ref(), args.overwrite, |output| {
                 Ok(ravencap_core::decrypt_stream(input, output, identities)?)
@@ -210,8 +222,11 @@ fn main() -> Result<()> {
             })?;
         }
         Command::Inspect(args) => {
-            let identities =
-                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
+            let identities = resolve_identities(
+                args.insecure_passphrase_cli,
+                args.passphrase_file,
+                args.identities,
+            )?;
             let input = open_command_input(&args.input)?;
             let info = ravencap_core::inspect_manifest(input, identities)?;
             with_output(args.output.as_ref(), args.overwrite, |output| {
@@ -219,8 +234,11 @@ fn main() -> Result<()> {
             })?;
         }
         Command::Verify(args) => {
-            let identities =
-                resolve_identities(args.passphrase, args.passphrase_file, args.identities)?;
+            let identities = resolve_identities(
+                args.insecure_passphrase_cli,
+                args.passphrase_file,
+                args.identities,
+            )?;
             let input = open_command_input(&args.input)?;
             let mode = if args.quick {
                 VerifyMode::Quick
@@ -254,11 +272,11 @@ fn main() -> Result<()> {
 }
 
 fn resolve_recipients(
-    passphrase: Option<String>,
+    insecure_passphrase_cli: Option<String>,
     passphrase_file: Option<PathBuf>,
     recipients: Vec<String>,
 ) -> Result<Vec<Recipient>> {
-    let passphrase = resolve_optional_passphrase(passphrase, passphrase_file)?;
+    let passphrase = resolve_optional_passphrase(insecure_passphrase_cli, passphrase_file)?;
 
     let mut resolved = Vec::new();
     if let Some(passphrase) = passphrase {
@@ -273,11 +291,11 @@ fn resolve_recipients(
 }
 
 fn resolve_identities(
-    passphrase: Option<String>,
+    insecure_passphrase_cli: Option<String>,
     passphrase_file: Option<PathBuf>,
     identities: Vec<PathBuf>,
 ) -> Result<Vec<Identity>> {
-    let passphrase = resolve_optional_passphrase(passphrase, passphrase_file)?;
+    let passphrase = resolve_optional_passphrase(insecure_passphrase_cli, passphrase_file)?;
 
     let mut resolved = Vec::new();
     if let Some(passphrase) = passphrase {
@@ -298,14 +316,17 @@ fn resolve_identities(
 }
 
 fn resolve_optional_passphrase(
-    passphrase: Option<String>,
+    insecure_passphrase_cli: Option<String>,
     passphrase_file: Option<PathBuf>,
 ) -> Result<Option<String>> {
-    if passphrase.is_some() && passphrase_file.is_some() {
-        bail!("use only one of --passphrase or --passphrase-file");
+    if insecure_passphrase_cli.is_some() && passphrase_file.is_some() {
+        bail!("use only one of --insecure-passphrase-cli or --passphrase-file");
     }
 
-    if let Some(passphrase) = passphrase {
+    if let Some(passphrase) = insecure_passphrase_cli {
+        eprintln!(
+            "warning: --insecure-passphrase-cli exposes secrets through process listings and shell history; prefer --passphrase-file or the interactive prompt"
+        );
         return Ok(Some(passphrase));
     }
 
