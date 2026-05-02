@@ -36,6 +36,8 @@ Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Omit `--passphr
 
 ## Immediate Next Steps
 
-1. Implement extraction for RAVP tar payloads.
+The full v1.0 closure roadmap is tracked in [docs/v1-closure-plan.md](docs/v1-closure-plan.md).
+
+1. Keep CI green on every push.
 2. Add atomic file output for managed `-o` writes.
-3. Turn the placeholder docs into full v1.0 product documentation.
+3. Implement archive pack/unpack with safe paths and zstd TAR payloads.
