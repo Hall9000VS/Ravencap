@@ -1,4 +1,6 @@
-use std::io::Read;
+#![no_main]
+
+use libfuzzer_sys::fuzz_target;
 
 fn fuzz_one(data: &[u8]) {
     let mut archive = tar::Archive::new(data);
@@ -30,10 +32,4 @@ fn fuzz_one(data: &[u8]) {
     }
 }
 
-fn main() {
-    let mut data = Vec::new();
-    std::io::stdin()
-        .read_to_end(&mut data)
-        .expect("read fuzz input");
-    fuzz_one(&data);
-}
+fuzz_target!(|data: &[u8]| fuzz_one(data));

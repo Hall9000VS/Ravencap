@@ -1,6 +1,6 @@
 # Fuzzing
 
-This directory contains small local fuzz harnesses for untrusted Ravencap input boundaries. They are intentionally buildable with plain Cargo so CI and contributors can catch harness drift without requiring a fuzzing engine.
+This directory contains cargo-fuzz/libFuzzer harnesses for untrusted Ravencap input boundaries.
 
 Targets:
 
@@ -9,16 +9,24 @@ Targets:
 - `archive_path_validator`: validates archive paths and `link_path\0target` symlink target pairs.
 - `tar_entry_path_validator`: parses arbitrary bytes as a TAR stream and validates discovered entry paths.
 
-Build all harnesses:
+Build all harnesses without running fuzzing:
 
 ```sh
 cargo check --manifest-path fuzz/Cargo.toml --bins
 ```
 
-Run a corpus file through a target:
+Run a target with cargo-fuzz:
 
 ```sh
-cargo run --manifest-path fuzz/Cargo.toml --bin ravp_prelude_parser < fuzz/corpus/ravp_prelude_parser/invalid_magic.bin
+cargo +nightly fuzz run ravp_prelude_parser
 ```
+
+Run only the checked-in corpus for a target:
+
+```sh
+cargo +nightly fuzz run ravp_prelude_parser fuzz/corpus/ravp_prelude_parser -- -runs=0
+```
+
+On Windows MSVC, full `cargo fuzz run` also requires the matching sanitizer runtime libraries. If those are unavailable, use `cargo check --manifest-path fuzz/Cargo.toml --bins` to catch harness drift and run fuzzing on a supported libFuzzer environment.
 
 Seed corpora live under `fuzz/corpus` and cover invalid magic, unsupported version, oversized manifest length, truncated prefix, invalid JSON, duplicate paths, traversal paths, unsafe symlinks, and non-TAR input.

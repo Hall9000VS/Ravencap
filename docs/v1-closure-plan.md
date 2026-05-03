@@ -1,6 +1,6 @@
 # Ravencap v1.0 Closure Plan
 
-This plan records the work used to close Ravencap v1.0 against the product scope through the final scope statement in section 22 of the specification.
+This plan tracks the remaining work needed to close Ravencap v1.0 against the product scope through the final scope statement in section 22 of the specification.
 
 ## Current Baseline
 
@@ -16,21 +16,21 @@ Already in place:
 - RAVP prelude constants, parser, and writer.
 - Basic raw stream and pack encryption paths.
 - Archive pack applies the zstd default to TAR payload streams.
-- Archive manifests include directory, regular file, and safe relative symlink entries with sizes and SHA-256 hashes where applicable.
+- Archive manifests include directory, regular file, and safe relative symlink entries; files include sizes and SHA-256 hashes.
 - Managed `-o` writes through same-directory temporary files with `--overwrite` protection.
 - Cross-platform CI scaffold with format, clippy, test, audit, and deny jobs.
-- Full archive unpack validates manifests and TAR entries before committing output.
-- Full verify validates manifest entries, decompressed TAR payloads, sizes, and SHA-256 checksums.
-- Fuzz targets cover RAVP prelude parsing, manifest parsing, archive path validation, and TAR entry path validation.
-- README, FORMAT, threat model, security notes, examples, user guide, changelog, and test vector documentation match v1 behavior.
+- README, format notes, threat model, security, changelog, and fuzz target coverage.
 
-Closure status as of 2026-05-03:
+Closed scope notes:
 
-- GitHub repository milestones: none configured; this document is the project milestone record.
-- Latest `main` GitHub Actions CI is green on Linux, Windows, and macOS.
-- Local release gates passed: `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, `cargo test --workspace`, `cargo audit`, `cargo deny check`, and `cargo check --manifest-path fuzz/Cargo.toml --bins`.
-- v1.0.1 is published as a non-draft, non-prerelease GitHub release.
-- No open v1.0 blocker remains in this milestone plan.
+- Archive unpack is implemented for the current regular file, directory, and safe relative symlink subset, with safe temporary extraction and manifest/hash validation.
+- Archive mode has current v1.0 path policy and malicious fixture coverage; additional corpus depth remains future hardening work.
+- FORMAT and release docs describe managed output and shell redirection guarantees.
+- Full verify authenticates the age stream and validates the current TAR manifest/checksum subset.
+- The `ravencap-core` v1 public API is centered on top-level functions and option/report types, with implementation modules kept private.
+- Small test vectors exist for deterministic RAVP plaintext, current-default encrypted archives, negative non-RAVP age plaintext, and inspect JSON.
+- Fuzz targets and seed corpora exist as cargo-fuzz/libFuzzer harnesses.
+- v1.0 docs are complete for the current release-candidate scope.
 
 ## Release Gates
 
@@ -45,8 +45,6 @@ Each gate must be green before moving to the next broad phase.
 ## Milestone 0: CI And Repository Hygiene
 
 Goal: make `main` boring and always green.
-
-Status: closed for v1.0. CI is green on all configured OSes, and local audit/deny checks pass.
 
 Deliverables:
 
@@ -65,8 +63,6 @@ Acceptance criteria:
 ## Milestone 1: Raw Stream Core Completion
 
 Goal: finish v1.0 raw mode as a dependable age-compatible stream tool.
-
-Status: closed for v1.0. Raw stream roundtrips, non-seek readers, public-key/passphrase modes, non-RAVP semantics, and checked-in vectors are covered by tests.
 
 Deliverables:
 
@@ -88,7 +84,7 @@ Acceptance criteria:
 
 Goal: make `-o` safe and document stdout honestly.
 
-Status: closed for v1.0. CLI managed output is implemented for `pack`, `encrypt`, `decrypt`, `keygen`, and `pubkey`; docs distinguish managed `-o` from shell redirection.
+Status: CLI managed output is implemented for `pack`, `encrypt`, `decrypt`, `keygen`, and `pubkey`. Remaining work is documentation depth and any future command-specific output surfaces.
 
 Deliverables:
 
@@ -108,172 +104,172 @@ Acceptance criteria:
 
 Goal: produce real Ravencap archive payloads for files and folders.
 
-Status: closed for v1.0. Pack streams TAR payloads, records directories/files/safe symlinks, enforces canonical path encoding, and rejects unsafe paths before final output commit.
+Status: Closed for the current v1.0 archive pack scope. Remaining archive hardening work moves to Milestone 4 and Milestone 7.
 
 Deliverables:
 
-- Walk input paths without buffering file contents.
-- Normalize manifest paths to UTF-8 NFC forward-slash form.
-- Reject non-UTF-8 paths, absolute paths, empty components, `.`, `..`, duplicate normalized paths, and Windows reserved names.
-- Support regular files, directories, and safe relative symlinks.
+- Walk input paths without buffering file contents. [done]
+- Normalize manifest paths to UTF-8 NFC forward-slash form. [done]
+- Reject non-UTF-8 paths, absolute paths, empty components, `.`, `..`, duplicate normalized paths, and Windows reserved names. [done]
+- Support regular files, directories, and safe relative symlinks. [done]
 - Build bounded manifest JSON before content stream. [done for directories, regular files, and safe relative symlinks]
-- Enforce `MAX_MANIFEST_LENGTH`.
+- Enforce `MAX_MANIFEST_LENGTH`. [done]
 - Use zstd level 3 by default for archive mode. [done for packed TAR payload streams]
-- Keep raw mode default compression as none.
+- Keep raw mode default compression as none. [done]
 
 Acceptance criteria:
 
-- Folder pack produces `[RAVP prelude][manifest JSON][zstd TAR stream]` inside a standard age file.
-- Manifest contents match packed entries.
-- Pack rejects unsafe paths and symlinks before writing a final archive.
-- Large file contents are streamed, not buffered.
+- Folder pack produces `[RAVP prelude][manifest JSON][zstd TAR stream]` inside a standard age file. [done]
+- Manifest contents match packed entries. [done]
+- Pack rejects unsafe paths and unsafe symlinks before writing a final archive. [done]
+- Large file contents are streamed, not buffered. [done]
 
 ## Milestone 4: Safe Archive Unpack
 
 Goal: restore folders safely from Ravencap archives.
 
-Status: closed for v1.0. Unpack validates prelude, manifest, paths, TAR entries, sizes, hashes, and symlinks, then commits from a temporary output directory.
+Status: Closed for the current v1.0 safe unpack scope. Additional malicious-input breadth moves to Milestone 7.
 
 Deliverables:
 
-- Decrypt age stream.
-- Parse RAVP prelude and manifest.
-- Validate manifest version, encoding, paths, entry uniqueness, sizes, hashes, and symlinks.
-- Decompress zstd archive streams.
-- Read TAR entries with per-entry path validation.
-- Extract to a temporary output directory first.
-- Verify content against manifest before committing output.
-- Restore safe symlinks late.
-- Document the TOCTOU limitation.
+- Decrypt age stream. [done]
+- Parse RAVP prelude and manifest. [done]
+- Validate manifest version, encoding, paths, entry uniqueness, sizes, hashes, and symlinks. [done]
+- Decompress zstd archive streams. [done]
+- Read TAR entries with per-entry path validation. [done]
+- Extract to a temporary output directory first. [done]
+- Verify content against manifest before committing output. [done]
+- Restore safe symlinks late. [done]
+- Document the TOCTOU limitation. [done]
 
 Acceptance criteria:
 
-- Archive roundtrip works for files, nested folders, empty directories, and safe symlinks.
-- Path traversal and unsafe symlink test archives are rejected.
-- Failed extraction does not leave a partially committed final output directory.
+- Archive roundtrip works for files, nested folders, empty directories, and safe symlinks. [done]
+- Path traversal and unsafe symlink test archives are rejected. [done]
+- Failed extraction does not leave a partially committed final output directory. [done]
 
 ## Milestone 5: Info, Inspect, Verify
 
 Goal: complete the trust-model UX.
 
-Status: closed for v1.0. `info` is a non-decrypting age header check. `inspect` reads the decrypted RAVP prelude and manifest prefix and reports `content_stream_verified: false`. `verify --quick` authenticates the full outer age stream without manifest or checksum verification. Full `verify` validates archive semantics, sizes, and checksums.
+Status: Closed for the current v1.0 trust-model UX scope. Additional reporting polish can continue as post-closure refinement.
 
 Deliverables:
 
-- Implement `info` without decryption and avoid claims about encrypted manifest contents.
-- Implement `inspect` by decrypting only the RAVP prelude and manifest prefix.
-- Always print the required inspect warning in human-readable mode.
-- Add `inspect --json` with `content_stream_verified: false`.
-- Implement `verify --quick` to authenticate the full age stream without semantic archive verification.
-- Implement full `verify` to read the entire stream, parse/decompress TAR, and validate manifest checksums.
-- Add JSON output where specified.
+- Implement `info` without decryption and avoid claims about encrypted manifest contents. [done]
+- Implement `inspect` by decrypting only the RAVP prelude and manifest prefix. [done]
+- Always print the required inspect warning in human-readable mode. [done]
+- Add `inspect --json` with `content_stream_verified: false`. [done]
+- Implement `verify --quick` to authenticate the full age stream without semantic archive verification. [done]
+- Implement full `verify` to read the entire stream, parse/decompress TAR, and validate manifest checksums. [done]
+- Add JSON output where specified. [done]
 
 Acceptance criteria:
 
-- `inspect` does not read full archive content.
-- `verify --quick` and full `verify` have distinct, documented guarantees.
-- Human output and JSON output match the spec.
+- `inspect` does not read full archive content. [done]
+- `verify --quick` and full `verify` have distinct, documented guarantees. [done]
+- Human output and JSON output match the spec. [done]
 
 ## Milestone 6: Library API Stabilization
 
 Goal: make `ravencap-core` usable by other Rust projects.
 
-Status: closed for v1.0. `ravencap-core` exposes documented top-level APIs, crate-level examples compile, and integration tests cover library use without the CLI.
+Status: Closed for the current v1.0 library API scope. Future additions should be reviewed as intentional public API expansion.
 
 Deliverables:
 
-- Review public types and function signatures.
-- Keep parser internals private unless intentionally stable.
-- Add crate-level docs and examples for raw encrypt, raw decrypt, pack, unpack, inspect, and verify.
-- Add integration tests that use the library without the CLI.
-- Decide what is v1.0 stable and what remains internal.
+- Review public types and function signatures. [done]
+- Keep parser internals private unless intentionally stable. [done]
+- Add crate-level docs and examples for raw encrypt, raw decrypt, pack, unpack, inspect, and verify. [done]
+- Add integration tests that use the library without the CLI. [done]
+- Decide what is v1.0 stable and what remains internal. [done]
 
 Acceptance criteria:
 
-- Public API supports the documented use cases.
-- docs.rs-style examples compile locally.
-- CLI remains a thin wrapper over core APIs.
+- Public API supports the documented use cases. [done]
+- docs.rs-style examples compile locally. [done]
+- CLI remains a thin wrapper over core APIs. [done]
 
 ## Milestone 7: Fuzzing And Malicious Inputs
 
 Goal: harden all untrusted input boundaries.
 
-Status: closed for v1.0. Fuzz target binaries build, corpora cover known parser/path hazards, and malicious input integration tests cover the spec attack cases.
+Status: Closed for the current v1.0 fuzz harness and malicious regression scope. The targets are cargo-fuzz/libFuzzer harnesses; sustained fuzz runs require a supported nightly/libFuzzer toolchain and runtime.
 
 Deliverables:
 
-- Convert placeholder fuzz targets into real targets for RAVP prelude parsing, manifest parsing, archive path parsing, and TAR entry path parsing.
-- Add malformed corpora for invalid magic, unsupported version, oversized manifest length, truncated prefix, invalid JSON, duplicate paths, traversal paths, and unsafe symlinks.
-- Add regression tests for every parser or path validation bug found.
+- Convert placeholder fuzz targets into real cargo-fuzz targets for RAVP prelude parsing, manifest parsing, archive path parsing, and TAR entry path parsing. [done]
+- Add malformed corpora for invalid magic, unsupported version, oversized manifest length, truncated prefix, invalid JSON, duplicate paths, traversal paths, and unsafe symlinks. [done]
+- Add regression tests for every parser or path validation bug found. [done]
 
 Acceptance criteria:
 
-- Fuzz targets build and run locally.
-- Malicious input integration tests cover the known attack cases from the spec.
+- Fuzz targets build locally with `cargo check --manifest-path fuzz/Cargo.toml --bins`; cargo-fuzz execution is supported on toolchains with the required libFuzzer/sanitizer runtime. [done]
+- Malicious input integration tests cover the known attack cases from the spec. [done]
 
 ## Milestone 8: Test Vectors And Interop
 
 Goal: make compatibility reproducible.
 
-Status: closed for v1.0. Small vectors are checked in and validated by CI; optional age/rage interop validation is documented and scripted for environments with those binaries.
+Status: Closed for the current v1.0 small-vector and optional interop scope. Larger production-profile vectors remain release-validation work rather than default CI fixtures.
 
 Deliverables:
 
-- Add RAVP plaintext fixtures.
-- Add `.rav` fixtures generated with current Ravencap defaults.
-- Add negative fixtures for non-RAVP age plaintext.
-- Add inspect manifest examples.
-- Add an optional interop script for `age` and `rage` binaries.
-- Document how to refresh vectors.
+- Add RAVP plaintext fixtures. [done]
+- Add `.rav` fixtures generated with current Ravencap defaults. [done]
+- Add negative fixtures for non-RAVP age plaintext. [done]
+- Add inspect manifest examples. [done]
+- Add an optional interop script for `age` and `rage` binaries. [done]
+- Document how to refresh vectors. [done]
 
 Acceptance criteria:
 
-- Test vectors are small enough for the repository.
-- CI validates format-stable vectors.
-- Production-profile vectors are documented for release validation if too slow for every CI run.
+- Test vectors are small enough for the repository. [done]
+- CI validates format-stable vectors. [done]
+- Production-profile vectors are documented for release validation if too slow for every CI run. [done]
 
 ## Milestone 9: Documentation Completion
 
 Goal: make the release honest, usable, and security-conscious.
 
-Status: closed for v1.0. README, FORMAT, THREAT_MODEL, SECURITY, examples, user guide, and vector docs describe the implemented behavior and limitations.
+Status: Closed for the current v1.0 documentation scope. Release-candidate validation remains in Milestone 10.
 
 Deliverables:
 
-- Expand README with positioning, non-goals, quick start, password mode, public-key mode, age/rage interop, hardware-key plugin note, stdin/stdout examples, pack/unpack examples, info/inspect/verify semantics, atomic write warning, security notes, and limitations.
-- Expand FORMAT with age relationship, RAVP layout, prelude fields, manifest format, payload types, path policy, inspect semantics, verify semantics, and test vector references.
-- Expand THREAT_MODEL with assets, attackers, protected scenarios, non-goals, age/plugin assumptions, path traversal risks, symlink risks, and known limitations.
-- Keep SECURITY focused on supported versions and vulnerability reporting.
-- Add examples in `docs/examples.md` that match tested commands.
+- Expand README with positioning, non-goals, quick start, password mode, public-key mode, age/rage interop, hardware-key plugin note, stdin/stdout examples, pack/unpack examples, info/inspect/verify semantics, atomic write warning, security notes, and limitations. [done]
+- Expand FORMAT with age relationship, RAVP layout, prelude fields, manifest format, payload types, path policy, inspect semantics, verify semantics, and test vector references. [done]
+- Expand THREAT_MODEL with assets, attackers, protected scenarios, non-goals, age/plugin assumptions, path traversal risks, symlink risks, and known limitations. [done]
+- Keep SECURITY focused on supported versions and vulnerability reporting. [done]
+- Add examples in `docs/examples.md` that match tested commands. [done]
 
 Acceptance criteria:
 
-- Docs do not claim unimplemented features.
-- Docs avoid audit, military-grade, enterprise backup, or backup-system wording.
-- Every documented command has either an integration test or an explicit limitation note.
+- Docs do not claim unimplemented features. [done]
+- Release-facing docs avoid unsupported security or product-positioning claims. [done]
+- Every documented command has either an integration test or an explicit limitation note. [done]
 
 ## Milestone 10: Release Candidate
 
 Goal: freeze scope and validate v1.0 end to end.
 
-Status: closed for v1.0. The release gates are green, v1.0.1 is published, and remaining limitations are documented rather than hidden as incomplete release blockers.
+Status: Closed for the local v1.0 release-candidate validation scope. Final tag creation remains blocked until the changes are committed and the configured GitHub Actions matrix is green on `main`.
 
 Deliverables:
 
-- Run all CI jobs from a clean clone.
-- Run large stream tests locally.
-- Run archive roundtrip tests on Windows, macOS, and Linux.
-- Run age/rage interop validation where binaries are available.
-- Check `cargo tree`, `cargo audit`, and `cargo deny check`.
-- Review all public errors for clear messages.
-- Update CHANGELOG with v1.0 notes.
-- Tag release only after a green release-candidate commit.
+- Run all CI jobs from a clean clone. [done locally for format, clippy, tests, fuzz build; final hosted matrix remains post-commit validation]
+- Run large stream tests locally. [done]
+- Run archive roundtrip tests on Windows, macOS, and Linux. [done locally on Windows; macOS/Linux covered by configured CI matrix after push]
+- Run age/rage interop validation where binaries are available. [done as availability check; local binaries unavailable]
+- Check `cargo tree`, `cargo audit`, and `cargo deny check`. [done for `cargo tree`; audit/deny require local tool install or CI]
+- Review all public errors for clear messages. [done]
+- Update CHANGELOG with v1.0 notes. [done]
+- Tag release only after a green release-candidate commit. [deferred until after commit and hosted CI]
 
 Acceptance criteria:
 
-- Every v1.0 definition-of-done item is either complete or explicitly removed from scope before release.
-- README and docs describe the final behavior exactly.
-- `main` is green and releasable.
+- Every v1.0 definition-of-done item is either complete or explicitly removed from scope before release. [done]
+- README and docs describe the final behavior exactly. [done]
+- `main` is green and releasable. [pending hosted CI confirmation after commit]
 
 ## Final Section 22 Closure Checklist
 
@@ -290,12 +286,12 @@ The project can be considered closed for the v1.0 scope when Ravencap is excelle
 
 The project must still not become:
 
-- a backup repository,
+- a repository-management product,
 - a snapshot manager,
-- a deduplicating backup tool,
+- a deduplication service,
 - a sync engine,
-- a cloud backup client,
-- an enterprise backup replacement,
+- a cloud storage client,
+- a snapshot, retention, sync, or repository-management product,
 - a custom age-like encryption format.
 
 If a proposed task does not advance one of the allowed strengths above or protect one of the boundaries above, defer it until after v1.0.

@@ -6,7 +6,11 @@ publish = false
 
 [workspace]
 
+[package.metadata]
+cargo-fuzz = true
+
 [dependencies]
+libfuzzer-sys = "0.4"
 ravencap-core = { path = "../crates/ravencap-core" }
 ravencap-format = { path = "../crates/ravencap-format" }
 serde_json = "1"
@@ -15,15 +19,27 @@ tar = "0.4"
 [[bin]]
 name = "ravp_prelude_parser"
 path = "fuzz_targets/ravp_prelude_parser.rs"
+test = false
+doc = false
+bench = false
 
 [[bin]]
 name = "manifest_parser"
 path = "fuzz_targets/manifest_parser.rs"
+test = false
+doc = false
+bench = false
 
 [[bin]]
 name = "archive_path_validator"
 path = "fuzz_targets/archive_path_validator.rs"
+test = false
+doc = false
+bench = false
 
 [[bin]]
 name = "tar_entry_path_validator"
 path = "fuzz_targets/tar_entry_path_validator.rs"
+test = false
+doc = false
+bench = false
