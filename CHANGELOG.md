@@ -1,14 +1,6 @@
 # Changelog
 
-## 1.0.1 - 2026-05-02
-
-- Fixed archive manifest `path_encoding` to the v1 canonical `utf-8-nfc-forward-slash` value.
-- Accepted standard age identity files with comment lines when deriving public keys or decrypting.
-- Rejected `.` as a whole symlink target and added a regression test.
-- Avoided creating a missing unpack parent directory before archive authentication and verification succeeds.
-- Replaced inline `--passphrase` CLI usage with `--passphrase-file`, prompt mode, or explicit `--insecure-passphrase-cli` for controlled tests.
-
-## 1.0.0 - 2026-05-02
+## Unreleased
 
 - Initialized the Ravencap workspace, crate layout, docs skeleton, and CI scaffold.
 - Added standard age X25519 key generation, public-key export, and public-key encrypt/decrypt flows.
@@ -18,11 +10,3 @@
 - Implemented `inspect` human and JSON output for the decrypted RAVP prelude and manifest prefix.
 - Applied the archive-mode zstd default to packed TAR payload streams.
 - Added full archive manifest entries for directories and regular files with sizes and SHA-256 hashes.
-- Implemented safe archive unpack for regular files, directories, and safe relative symlinks.
-- Added full archive verification for supported TAR archive payloads with manifest size and SHA-256 checks.
-- Added `verify --json` for quick and full verification reports.
-- Tightened archive path validation with UTF-8 NFC normalization, traversal rejection, Windows reserved-name rejection, and safe symlink target resolution.
-- Stabilized the `ravencap-core` public API around top-level functions and option/report types.
-- Added library integration tests, malicious input regression tests, standalone fuzz harnesses, seed corpora, and small v1 test vectors.
-- Added optional age/rage interop smoke validation script for checked-in public-key vectors.
-- Expanded release documentation for format semantics, trust-model commands, output safety, examples, threat model, and limitations.

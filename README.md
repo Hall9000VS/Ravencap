@@ -96,7 +96,7 @@ Archive unpack extracts to a temporary directory beside the requested output and
 
 ## Test Vectors And Examples
 
-Small compatibility fixtures live in `tests/vectors` and are validated by `cargo test --workspace`. More command examples are in [docs/examples.md](docs/examples.md), and the v1 format is described in [docs/file-format-v1.md](docs/file-format-v1.md).
+Small compatibility fixtures live in `tests/vectors` and are validated by `cargo test --workspace`. A simple non-technical user guide is in [docs/user-guide.md](docs/user-guide.md), more command examples are in [docs/examples.md](docs/examples.md), and the v1 format is described in [docs/file-format-v1.md](docs/file-format-v1.md).
 
 ## Workspace
 
