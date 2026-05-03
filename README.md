@@ -7,6 +7,28 @@
 
 Streaming encrypted archive tool for files, folders, and Unix-style pipelines.
 
+## Engineering Highlights
+
+- Standard age-compatible `.rav` envelope with a documented RAVP plaintext payload format.
+- Streaming-first encrypt/decrypt paths for files and Unix-style pipelines.
+- Archive manifests record normalized UTF-8 paths, sizes, hashes, directories, files, and safe relative symlinks.
+- Full archive verification authenticates the age stream, parses the payload, and checks manifest entry sizes and SHA-256 digests.
+- Managed output commits use temporary files or directories to avoid replacing existing outputs with partial results.
+- Release artifacts are produced by GitHub Actions with checksums, keyless cosign signatures, and GitHub artifact attestations.
+
+## Security Maturity And Audit Status
+
+| Area | Status |
+| --- | --- |
+| Cryptographic envelope | Uses the standard age file format for encryption, recipient handling, and stream authentication. |
+| Archive path policy | Rejects absolute paths, traversal, backslashes, Windows drive-like paths, reserved names, duplicate normalized paths, and unsafe symlink targets. |
+| Extraction safety | Extracts to a temporary directory inside the existing output parent and commits only after manifest and content verification succeeds. |
+| Secret handling | Public API secret-bearing variants use `SecretString`; CLI debug output avoids dumping sensitive argument structs. |
+| Automated validation | CI runs format, clippy, tests, audit, deny, and Rust 1.88 MSRV checks on Ubuntu, Windows, and macOS. |
+| Fuzzing | Cargo-fuzz/libFuzzer targets cover RAVP prelude parsing, manifest parsing, archive path validation, and TAR entry path validation. |
+| Release provenance | Release workflow publishes checksums, keyless cosign signature material, and GitHub artifact attestations for release archives. |
+| Independent audit | Not yet independently audited by a third party. |
+
 ## Status
 
 This repository contains Ravencap v2.0.1: an age-compatible streaming encryption and archive tool with pack/unpack, manifest inspection, and quick/full verification workflows.
