@@ -1,4 +1,6 @@
-use ravencap_core::manifest::{ArchiveManifest, ManifestEntry};
+use ravencap_core::manifest::{
+    ArchiveManifest, ManifestEntry, PATH_ENCODING_UTF8_NFC_FORWARD_SLASH,
+};
 
 #[test]
 fn tar_archive_manifest_records_directories_files_sizes_and_hashes() {
@@ -15,7 +17,7 @@ fn tar_archive_manifest_records_directories_files_sizes_and_hashes() {
     let manifest = ArchiveManifest::tar_archive(&root).expect("manifest");
 
     assert_eq!(manifest.version, 1);
-    assert_eq!(manifest.path_encoding, "utf-8");
+    assert_eq!(manifest.path_encoding, PATH_ENCODING_UTF8_NFC_FORWARD_SLASH);
     assert!(manifest.entries.contains(&ManifestEntry::Directory {
         path: "project".to_string()
     }));
