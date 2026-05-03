@@ -49,6 +49,22 @@ A `.rav` file is a standard age-encrypted file. After age decryption, the plaint
 
 Ravencap is focused on encrypted files, folders, and pipelines. It does not manage snapshots, retention, scheduling, deduplication, sync, cloud storage, or repositories.
 
+## Install from crates.io
+
+Install Rust 1.88 or newer from `https://rustup.rs/`, then install the published CLI package:
+
+```sh
+cargo install ravencap-cli
+```
+
+This installs the `ravencap` binary:
+
+```sh
+ravencap --help
+```
+
+Prebuilt release archives are available from GitHub Releases for Linux x86_64, Windows x86_64, macOS x86_64, and macOS arm64.
+
 ## Quick Start
 
 ```sh
