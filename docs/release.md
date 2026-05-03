@@ -71,10 +71,10 @@ cosign verify-blob SHA256SUMS \
 Verify GitHub artifact attestations:
 
 ```sh
-gh attestation verify ravencap-v2.0.1-linux-x86_64.tar.gz --repo Hall9000VS/Ravencap
-gh attestation verify ravencap-v2.0.1-macos-x86_64.tar.gz --repo Hall9000VS/Ravencap
-gh attestation verify ravencap-v2.0.1-macos-arm64.tar.gz --repo Hall9000VS/Ravencap
-gh attestation verify ravencap-v2.0.1-windows-x86_64.zip --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.2-linux-x86_64.tar.gz --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.2-macos-x86_64.tar.gz --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.2-macos-arm64.tar.gz --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.2-windows-x86_64.zip --repo Hall9000VS/Ravencap
 ```
 
 ## Manual Binary Build
@@ -85,18 +85,18 @@ If the automated workflow is unavailable, build each platform binary on the matc
 cargo build --release --locked
 ```
 
-Name artifacts with the version, target OS, target architecture, and archive format, for example `ravencap-v2.0.1-windows-x86_64.zip`.
+Name artifacts with the version, target OS, target architecture, and archive format, for example `ravencap-v2.0.2-windows-x86_64.zip`.
 
 Generate checksums from the final archives:
 
 ```sh
-sha256sum ravencap-v2.0.1-*.tar.gz ravencap-v2.0.1-*.zip > SHA256SUMS
+sha256sum ravencap-v2.0.2-*.tar.gz ravencap-v2.0.2-*.zip > SHA256SUMS
 ```
 
 On Windows PowerShell:
 
 ```powershell
-Get-FileHash .\ravencap-v2.0.1-*.zip -Algorithm SHA256
+Get-FileHash .\ravencap-v2.0.2-*.zip -Algorithm SHA256
 ```
 
 ## Future Automation

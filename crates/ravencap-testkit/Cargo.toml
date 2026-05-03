@@ -1,6 +1,7 @@
 [package]
 name = "ravencap-testkit"
 description = "Shared test fixtures and helpers for Ravencap crates."
+readme = "README.md"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,4 +9,4 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-ravencap-format = { path = "../ravencap-format", version = "2.0.1" }
+ravencap-format = { path = "../ravencap-format", version = "2.0.2" }

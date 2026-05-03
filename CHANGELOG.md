@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.0.2 - 2026-05-03
+
+- Added per-crate README files and explicit package `readme` metadata for the crates.io packages.
+- Republished the crates.io packages so each package page renders crate-specific documentation.
+
 ## 2.0.1 - 2026-05-03
 
 - Rejected archive file entries as soon as their streamed size exceeds the manifest size, before writing the oversized chunk to unpack output.
