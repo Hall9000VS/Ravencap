@@ -27,7 +27,19 @@ The easiest install method depends on what the project provides for your compute
 2. Download the file for your operating system.
 3. Unzip it if needed.
 4. Put the `ravencap` or `ravencap.exe` file somewhere easy to find, such as a `Ravencap` folder in your user directory.
-5. Open a terminal in that folder and run `ravencap --help`.
+5. Open a terminal in that folder and check that Ravencap runs:
+
+```powershell
+.\ravencap.exe --help
+```
+
+On macOS or Linux, use:
+
+```sh
+./ravencap --help
+```
+
+If the folder is already in your `PATH`, you can run `ravencap --help` from any terminal instead.
 
 If there is no ready-made download yet, install it from source with Rust:
 
@@ -45,10 +57,10 @@ After the build finishes, the program will be here:
 - Windows: `target\release\ravencap.exe`
 - macOS/Linux: `target/release/ravencap`
 
-You can run it from the project folder like this:
+Check that Ravencap runs from the project folder. On Windows PowerShell, use:
 
-```sh
-target\release\ravencap.exe --help
+```powershell
+.\target\release\ravencap.exe --help
 ```
 
 On macOS or Linux, use:
@@ -57,13 +69,9 @@ On macOS or Linux, use:
 ./target/release/ravencap --help
 ```
 
+The examples below use `ravencap` as the command name. On Windows, if `ravencap.exe` is in your current folder and not in your `PATH`, type `.\ravencap.exe` instead of `ravencap`.
+
 For regular use, copy the built program to the folder where you keep your tools, or keep using it from the `target/release` folder.
-
-Check that Ravencap runs:
-
-```sh
-ravencap --help
-```
 
 For the simplest workflow, put your passphrase in a small text file named `passphrase.txt`:
 
