@@ -9,9 +9,9 @@ Streaming encrypted archive tool for files, folders, and Unix-style pipelines.
 
 ## Status
 
-This repository contains Ravencap v1.0.2: age-compatible streaming encryption, archive pack/unpack, and trust-model commands for public info, manifest inspection, and quick/full verification.
+This repository contains Ravencap v1.0.2: an age-compatible streaming encryption and archive tool with pack/unpack, manifest inspection, and quick/full verification workflows.
 
-Security status: Ravencap is an experimental personal project and has not been independently audited.
+Ravencap is built around conservative security boundaries, explicit non-goals, safe archive extraction, and documented trust-model semantics. It has not undergone an independent third-party security audit.
 
 Copyright (c) 2026 VaV Labs.
 
