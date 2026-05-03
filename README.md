@@ -3,13 +3,13 @@
 [![CI](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml/badge.svg)](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml)
 [![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-93450a)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.0.0-informational)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.0.1-informational)](CHANGELOG.md)
 
 Streaming encrypted archive tool for files, folders, and Unix-style pipelines.
 
 ## Status
 
-This repository contains Ravencap v2.0.0: an age-compatible streaming encryption and archive tool with pack/unpack, manifest inspection, and quick/full verification workflows.
+This repository contains Ravencap v2.0.1: an age-compatible streaming encryption and archive tool with pack/unpack, manifest inspection, and quick/full verification workflows.
 
 Ravencap is built around conservative security boundaries, explicit non-goals, safe archive extraction, and documented trust-model semantics. It has not undergone an independent third-party security audit.
 
@@ -107,7 +107,7 @@ Managed `-o` writes are committed through a temporary file in the same directory
 
 Shell redirection is controlled by the shell, not Ravencap. Commands such as `ravencap decrypt ... > output` can leave partial files if interrupted or if the command fails after the shell creates the destination. Streaming decrypt emits plaintext before final authentication succeeds at EOF; use managed `-o` output or run `verify` first when writing files that should only appear after a fully authenticated read.
 
-Archive unpack extracts to a temporary directory beside the requested output and renames it into place only after manifest and content verification succeeds. The requested output directory must not already exist.
+Archive unpack extracts to a temporary directory inside the existing parent directory of the requested output and renames it into place only after manifest and content verification succeeds. The requested output directory must not already exist, and its parent directory must already exist.
 
 ## Security Notes And Limitations
 
@@ -116,7 +116,8 @@ Archive unpack extracts to a temporary directory beside the requested output and
 - Compromised machines, malicious administrators, keyloggers, and unsafe shell history can expose secrets before Ravencap sees them.
 - Input trees should remain unchanged while `ravencap pack` is running. Ravencap verifies packed archives during later `verify` or `unpack`, but concurrent source changes can produce an archive whose manifest and payload no longer agree.
 - Archive paths are UTF-8, NFC-normalized, forward-slash relative paths. Absolute paths, traversal, Windows drive-like paths, reserved names, and unsafe symlink targets are rejected.
-- Symlinks are restored only when the target stays inside the archive root and resolves to a file or directory entry in the manifest.
+- Symlinks are restored only when the target stays inside the same top-level archive root component and resolves to a file or directory entry in the manifest. Multi-root archive symlink traversal across top-level components is intentionally unsupported in v1 format semantics.
+- Ravencap restores file contents, directories, and safe relative symlinks. It does not preserve ownership, group, mtime, permissions, setuid/setgid bits, ACLs, or extended attributes. Restored regular files are created according to the current platform defaults and process umask.
 - Extraction should happen in a parent directory controlled by the caller. Ravencap does not fully defend against a concurrent local attacker modifying the extraction parent during the final rename.
 - `inspect` is intentionally a partial read and must not be treated as content verification. Use full `verify` before trusting archive contents.
 

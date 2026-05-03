@@ -50,7 +50,7 @@ The Ravencap CLI directly supports passphrases and age secret-key identity files
 
 Archive paths are required to be relative UTF-8 NFC forward-slash paths. Ravencap rejects absolute paths, traversal components, Windows drive-like syntax, reserved names, trailing dot/space components, NUL bytes, and duplicate normalized paths.
 
-Symlink entries are accepted only when their target is relative, stays inside the archive root after resolving `.` and `..`, and resolves to a file or directory manifest entry. Symlink-to-symlink targets are rejected.
+Symlink entries are accepted only when their target is relative, stays inside the same top-level archive root component after resolving `.` and `..`, and resolves to a file or directory manifest entry. Symlink-to-symlink targets are rejected. Multi-root archive symlink traversal across top-level components is intentionally unsupported in v1 format semantics.
 
 ## Archive Extraction Limitations
 
@@ -59,6 +59,12 @@ Ravencap validates archive paths, rejects traversal and unsafe symlink targets, 
 This does not fully protect against a local attacker who can concurrently modify the parent output directory during extraction or final rename. Callers should extract into a directory they control and should not share the extraction parent with untrusted writers.
 
 Managed `-o` file outputs are written through same-directory temporary files. Shell redirection is not managed by Ravencap and may leave partial files if the shell creates the destination before a failing command completes. Raw streaming decrypt can emit plaintext before the final age authentication check succeeds at EOF; callers that need all-or-nothing files should use managed `-o` output or verify first.
+
+## Temporary Plaintext During Unpack
+
+During archive unpack, Ravencap writes decrypted file bytes into a temporary directory before the per-file manifest SHA-256 check has completed. These bytes come from the authenticated age stream, but they have not yet been accepted as matching the Ravencap manifest.
+
+If verification fails, Ravencap does not commit the temporary directory to the requested output path and relies on temporary-directory cleanup. Ravencap does not guarantee forensic erasure of temporary plaintext from journaling filesystems, snapshots, swap, crash recovery, or storage-level remnants.
 
 ## Pack Input Consistency
 

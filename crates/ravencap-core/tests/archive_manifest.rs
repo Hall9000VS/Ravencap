@@ -222,6 +222,53 @@ fn failed_unpack_does_not_create_missing_parent_directory() {
 }
 
 #[test]
+fn unpack_requires_existing_output_parent_directory() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let file = tempdir.path().join("payload.txt");
+    let parent = tempdir.path().join("missing-parent");
+    let output = parent.join("restored");
+
+    std::fs::write(&file, b"payload").expect("write file");
+
+    let mut archive = Vec::new();
+    ravencap_core::pack_path(
+        &file,
+        &mut archive,
+        PackOptions::new().recipient(Recipient::passphrase("correct")),
+    )
+    .expect("pack archive");
+
+    let result = ravencap_core::unpack_archive(
+        archive.as_slice(),
+        &output,
+        UnpackOptions::new().identity(Identity::passphrase("correct")),
+    );
+
+    assert!(result.is_err());
+    assert!(!parent.exists());
+    assert!(!output.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn pack_rejects_source_filenames_containing_backslash() {
+    let tempdir = tempfile::tempdir().expect("tempdir");
+    let root = tempdir.path().join("project");
+    let file = root.join("foo\\bar");
+
+    std::fs::create_dir(&root).expect("create root");
+    std::fs::write(&file, b"payload").expect("write file");
+
+    let result = ravencap_core::pack_path(
+        &root,
+        Vec::new(),
+        PackOptions::new().recipient(Recipient::passphrase("correct")),
+    );
+
+    assert!(result.is_err());
+}
+
+#[test]
 fn malicious_archive_path_traversal_is_rejected() {
     let tempdir = tempfile::tempdir().expect("tempdir");
     let output = tempdir.path().join("restored");
@@ -297,6 +344,10 @@ fn archive_path_validation_rejects_traversal_and_windows_drive_like_paths() {
     assert!(ravencap_core::paths::validate_relative_archive_path("folder/../file.txt").is_err());
     assert!(ravencap_core::paths::validate_relative_archive_path("C:/file.txt").is_err());
     assert!(ravencap_core::paths::validate_relative_archive_path("folder/CON.txt").is_err());
+    assert!(ravencap_core::paths::validate_relative_archive_path("folder/COM0.txt").is_err());
+    assert!(ravencap_core::paths::validate_relative_archive_path("folder/LPT0.txt").is_err());
+    assert!(ravencap_core::paths::validate_relative_archive_path("folder/CONIN$").is_err());
+    assert!(ravencap_core::paths::validate_relative_archive_path("folder/CONOUT$").is_err());
     assert!(
         ravencap_core::paths::validate_relative_archive_path("folder/cafe\u{301}.txt").is_err()
     );

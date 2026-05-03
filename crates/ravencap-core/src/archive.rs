@@ -48,10 +48,15 @@ pub fn unpack_archive(input: impl Read, output_dir: &Path, options: UnpackOption
     }
 
     let parent = output_dir.parent().unwrap_or_else(|| Path::new("."));
-    let temp_parent = nearest_existing_parent(parent);
+    if !parent.is_dir() {
+        return Err(RavencapError::InvalidPath(
+            "output parent directory does not exist; create it first".to_string(),
+        ));
+    }
+
     let temp_dir = tempfile::Builder::new()
         .prefix(".ravencap-unpack-")
-        .tempdir_in(temp_parent)?;
+        .tempdir_in(parent)?;
 
     with_decrypted_archive(input, options.identities, |decrypted| {
         read_verified_tar_archive(decrypted, Some(temp_dir.path()))
@@ -74,21 +79,14 @@ fn commit_unpacked_temp_dir_with(
     let parent = output_dir.parent().unwrap_or_else(|| Path::new("."));
     let temp_path = temp_dir.path().to_path_buf();
 
-    std::fs::create_dir_all(parent)?;
+    if !parent.is_dir() {
+        return Err(RavencapError::InvalidPath(
+            "output parent directory does not exist; create it first".to_string(),
+        ));
+    }
     rename(&temp_path, output_dir)?;
     std::mem::forget(temp_dir);
     Ok(())
-}
-
-fn nearest_existing_parent(path: &Path) -> &Path {
-    let mut candidate = path;
-    while !candidate.exists() {
-        match candidate.parent() {
-            Some(parent) => candidate = parent,
-            None => return Path::new("."),
-        }
-    }
-    candidate
 }
 
 pub(crate) fn verify_archive_contents(
@@ -440,8 +438,8 @@ fn tar_entry_link_name(entry: &tar::Entry<'_, &mut dyn Read>) -> Result<Option<S
         .transpose()
 }
 
-fn verify_file_entry(
-    entry: &mut tar::Entry<'_, &mut dyn Read>,
+fn verify_file_entry<R: Read>(
+    entry: &mut tar::Entry<'_, R>,
     output_path: Option<PathBuf>,
     expected_size: u64,
     expected_sha256: &str,
@@ -464,7 +462,14 @@ fn verify_file_entry(
         if bytes_read == 0 {
             break;
         }
-        size = size.saturating_add(bytes_read as u64);
+        size = size
+            .checked_add(bytes_read as u64)
+            .ok_or_else(|| RavencapError::Format("file size overflow".to_string()))?;
+        if size > expected_size {
+            return Err(RavencapError::Format(format!(
+                "file size exceeds manifest size: expected {expected_size}, got more"
+            )));
+        }
         hasher.update(&buffer[..bytes_read]);
         if let Some(output) = output.as_mut() {
             output.write_all(&buffer[..bytes_read])?;
@@ -535,7 +540,7 @@ fn create_symlink_late(
 
 fn path_to_forward_slash_string(path: &Path) -> Result<String> {
     path.to_str()
-        .map(|path| path.replace('\\', "/"))
+        .map(str::to_string)
         .ok_or_else(|| RavencapError::InvalidPath("path is not valid UTF-8".to_string()))
 }
 
@@ -619,5 +624,42 @@ mod tests {
 
         assert!(result.is_err());
         assert!(!temp_path.exists());
+    }
+
+    #[test]
+    fn oversized_file_entry_is_rejected_before_writing_chunk() {
+        let tempdir = tempfile::tempdir().expect("tempdir");
+        let output = tempdir.path().join("oversized.bin");
+        let tar_bytes = oversized_tar_file("project/oversized.bin", 1024 * 1024);
+        let mut archive = tar::Archive::new(tar_bytes.as_slice());
+        let mut entries = archive.entries().expect("tar entries");
+        let mut entry = entries.next().expect("first entry").expect("tar entry");
+
+        let result = verify_file_entry(
+            &mut entry,
+            Some(output.clone()),
+            1,
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        );
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::metadata(output).expect("output metadata").len(), 0);
+    }
+
+    fn oversized_tar_file(path: &str, size: usize) -> Vec<u8> {
+        let mut output = Vec::new();
+        {
+            let mut builder = tar::Builder::new(&mut output);
+            let mut header = tar::Header::new_gnu();
+            header.set_path(path).expect("set path");
+            header.set_size(size as u64);
+            header.set_mode(0o644);
+            header.set_cksum();
+            builder
+                .append(&header, vec![0_u8; size].as_slice())
+                .expect("append file");
+            builder.finish().expect("finish tar");
+        }
+        output
     }
 }

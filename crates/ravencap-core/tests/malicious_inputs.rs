@@ -137,6 +137,29 @@ fn traversal_tar_entry_paths_are_rejected() {
     assert_full_verify_and_unpack_reject(&archive);
 }
 
+#[test]
+fn backslash_tar_entry_paths_are_rejected() {
+    let manifest = ArchiveManifest {
+        version: 1,
+        path_encoding: "utf-8-nfc-forward-slash".to_string(),
+        entries: vec![ManifestEntry::File {
+            path: "project/file.txt".to_string(),
+            size: 0,
+            sha256: EMPTY_SHA256.to_string(),
+        }],
+    };
+    let manifest_bytes = serde_json::to_vec(&manifest).expect("serialize manifest");
+    let tar_bytes = malicious_empty_tar_file("project\\file.txt");
+
+    let archive = encrypted_ravp_plaintext(
+        PAYLOAD_TAR_ARCHIVE,
+        COMPRESSION_NONE,
+        manifest_bytes,
+        tar_bytes,
+    );
+    assert_full_verify_and_unpack_reject(&archive);
+}
+
 fn assert_full_verify_and_unpack_reject(archive: &[u8]) {
     let tempdir = tempfile::tempdir().expect("tempdir");
     let output = tempdir.path().join("restored");

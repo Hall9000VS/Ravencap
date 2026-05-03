@@ -47,9 +47,13 @@ Full `verify` reads the full decrypted stream and validates supported TAR archiv
 
 ## Extraction Boundary
 
-Ravencap extracts archive payloads into a temporary directory beside the requested output path, verifies the manifest and content stream, and then renames the temporary directory into place. The requested output directory must not already exist.
+Ravencap extracts archive payloads into a temporary directory inside the existing parent directory of the requested output path, verifies the manifest and content stream, and then renames the temporary directory into place. The requested output directory must not already exist, and its parent directory must already exist.
 
 This design avoids committing partial extraction output after a Ravencap error. It does not fully defend against a local attacker who can concurrently modify the parent directory during extraction or final rename. Callers should extract into a directory they control.
+
+During archive unpack, Ravencap writes decrypted file bytes into the temporary directory before the per-file manifest SHA-256 check has completed. These bytes come from the authenticated age stream, but they have not yet been accepted as matching the Ravencap manifest. If verification fails, Ravencap does not commit the temporary directory to the requested output path and relies on temporary-directory cleanup. Ravencap does not guarantee forensic erasure of temporary plaintext from journaling filesystems, snapshots, swap, crash recovery, or storage-level remnants.
+
+Ravencap restores file contents, directories, and safe relative symlinks. It does not preserve ownership, group, mtime, permissions, setuid/setgid bits, ACLs, or extended attributes. Restored regular files are created according to the current platform defaults and process umask.
 
 ## Shell Redirection Boundary
 

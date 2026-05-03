@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path};
 
 use sha2::{Digest, Sha256};
 use unicode_normalization::UnicodeNormalization;
@@ -115,32 +115,51 @@ fn archive_path_for_entry(root: &Path, root_name: &str, entry: &Path) -> Result<
         return Ok(root_name.to_string());
     }
 
-    let mut archive_path = PathBuf::from(root_name);
-    archive_path.push(relative);
-    path_to_forward_slash_string(&archive_path)
+    let mut components = vec![root_name.to_string()];
+    for component in relative.components() {
+        match component {
+            Component::Normal(component) => {
+                components.push(archive_component_to_string(component)?)
+            }
+            _ => {
+                return Err(RavencapError::InvalidPath(
+                    "path contains unsupported components".to_string(),
+                ));
+            }
+        }
+    }
+
+    Ok(components.join("/"))
 }
 
 fn archive_component_to_string(component: &std::ffi::OsStr) -> Result<String> {
-    component
+    let component = component
         .to_str()
-        .map(normalize_archive_string)
-        .ok_or_else(|| RavencapError::InvalidPath("path is not valid UTF-8".to_string()))
-}
-
-fn path_to_forward_slash_string(path: &Path) -> Result<String> {
-    path.to_str()
-        .map(normalize_archive_string)
-        .ok_or_else(|| RavencapError::InvalidPath("path is not valid UTF-8".to_string()))
+        .ok_or_else(|| RavencapError::InvalidPath("path is not valid UTF-8".to_string()))?;
+    if component.contains('\\') {
+        return Err(RavencapError::InvalidPath(
+            "path component contains backslash, which is not representable in Ravencap archive paths"
+                .to_string(),
+        ));
+    }
+    Ok(normalize_archive_string(component))
 }
 
 fn symlink_target_to_string(path: &Path) -> Result<String> {
-    path.to_str()
-        .map(normalize_archive_string)
-        .ok_or_else(|| RavencapError::InvalidPath("symlink target is not valid UTF-8".to_string()))
+    let target = path.to_str().ok_or_else(|| {
+        RavencapError::InvalidPath("symlink target is not valid UTF-8".to_string())
+    })?;
+    if target.contains('\\') {
+        return Err(RavencapError::InvalidPath(
+            "symlink target contains backslash, which is not representable in Ravencap archive paths"
+                .to_string(),
+        ));
+    }
+    Ok(normalize_archive_string(target))
 }
 
 fn normalize_archive_string(value: &str) -> String {
-    value.replace('\\', "/").nfc().collect()
+    value.nfc().collect()
 }
 
 fn sha256_file(path: &Path) -> Result<String> {

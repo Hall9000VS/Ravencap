@@ -69,7 +69,9 @@ Archive paths are relative UTF-8 strings normalized to NFC with forward slashes.
 - components ending in a space or dot,
 - duplicate normalized paths.
 
-Symlink targets are also UTF-8 NFC relative paths. A symlink target must stay inside the archive root after resolving `.` and `..`, and it must resolve to a file or directory manifest entry.
+Symlink targets are also UTF-8 NFC relative paths. A symlink target must stay inside the same top-level archive root component after resolving `.` and `..`, and it must resolve to a file or directory manifest entry. Multi-root archive symlink traversal across top-level components is intentionally unsupported in v1 format semantics.
+
+Ravencap restores file contents, directories, and safe relative symlinks. It does not preserve ownership, group, mtime, permissions, setuid/setgid bits, ACLs, or extended attributes. Restored regular files are created according to the current platform defaults and process umask.
 
 ## Command Semantics
 

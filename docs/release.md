@@ -34,7 +34,7 @@ Pushing a signed or reviewed tag named `v*` runs the release workflow in `.githu
 The workflow:
 
 - builds release binaries with `cargo build --release --locked`
-- packages Linux x86_64, macOS x86_64, and Windows x86_64 archives
+- packages Linux x86_64, macOS x86_64, macOS arm64, and Windows x86_64 archives
 - generates a `SHA256SUMS` file for the archives
 - signs `SHA256SUMS` with keyless cosign and uploads the signature plus bundle
 - creates GitHub artifact attestations from the checksum file
@@ -47,7 +47,7 @@ The release workflow uses pinned GitHub Actions and requires `contents: write`, 
 For each GitHub Release, attach:
 
 - source tag and release notes matching `CHANGELOG.md`
-- Linux, macOS, and Windows CLI binaries built from the tagged commit
+- Linux, macOS, and Windows CLI binaries built from the tagged commit, with macOS x86_64 and macOS arm64 artifacts labeled separately
 - SHA-256 checksums for every binary archive
 - `SHA256SUMS.sig` and `SHA256SUMS.cosign.bundle` for keyless cosign verification
 - GitHub artifact attestations for the checksummed release archives
@@ -63,17 +63,18 @@ Verify the checksum signature with cosign keyless identity constraints:
 
 ```sh
 cosign verify-blob SHA256SUMS \
-	--bundle SHA256SUMS.cosign.bundle \
-	--certificate-identity-regexp 'https://github.com/Hall9000VS/Ravencap/.github/workflows/release.yml@refs/tags/v.*' \
-	--certificate-oidc-issuer https://token.actions.githubusercontent.com
+  --bundle SHA256SUMS.cosign.bundle \
+  --certificate-identity-regexp 'https://github.com/Hall9000VS/Ravencap/.github/workflows/release.yml@refs/tags/v.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
 Verify GitHub artifact attestations:
 
 ```sh
-gh attestation verify ravencap-v2.0.0-linux-x86_64.tar.gz --repo Hall9000VS/Ravencap
-gh attestation verify ravencap-v2.0.0-macos-x86_64.tar.gz --repo Hall9000VS/Ravencap
-gh attestation verify ravencap-v2.0.0-windows-x86_64.zip --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.1-linux-x86_64.tar.gz --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.1-macos-x86_64.tar.gz --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.1-macos-arm64.tar.gz --repo Hall9000VS/Ravencap
+gh attestation verify ravencap-v2.0.1-windows-x86_64.zip --repo Hall9000VS/Ravencap
 ```
 
 ## Manual Binary Build
@@ -84,18 +85,18 @@ If the automated workflow is unavailable, build each platform binary on the matc
 cargo build --release --locked
 ```
 
-Name artifacts with the version, target OS, target architecture, and archive format, for example `ravencap-v2.0.0-windows-x86_64.zip`.
+Name artifacts with the version, target OS, target architecture, and archive format, for example `ravencap-v2.0.1-windows-x86_64.zip`.
 
 Generate checksums from the final archives:
 
 ```sh
-sha256sum ravencap-v2.0.0-*.tar.gz ravencap-v2.0.0-*.zip > SHA256SUMS
+sha256sum ravencap-v2.0.1-*.tar.gz ravencap-v2.0.1-*.zip > SHA256SUMS
 ```
 
 On Windows PowerShell:
 
 ```powershell
-Get-FileHash .\ravencap-v2.0.0-*.zip -Algorithm SHA256
+Get-FileHash .\ravencap-v2.0.1-*.zip -Algorithm SHA256
 ```
 
 ## Future Automation

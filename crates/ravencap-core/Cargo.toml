@@ -8,7 +8,7 @@ repository.workspace = true
 
 [dependencies]
 age.workspace = true
-ravencap-format = { path = "../ravencap-format", version = "2.0.0" }
+ravencap-format = { path = "../ravencap-format", version = "2.0.1" }
 serde_json.workspace = true
 serde.workspace = true
 sha2.workspace = true

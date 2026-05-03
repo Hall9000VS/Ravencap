@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 2.0.1 - 2026-05-03
+
+- Rejected archive file entries as soon as their streamed size exceeds the manifest size, before writing the oversized chunk to unpack output.
+- Required unpack output parent directories to exist before temporary extraction begins.
+- Rejected source filesystem path components and TAR entry paths containing backslashes instead of silently converting them to forward slashes.
+- Expanded Windows reserved-name rejection to include `COM0`, `LPT0`, `CONIN$`, and `CONOUT$`.
+- Split macOS release artifacts into explicitly labeled x86_64 and arm64 builds.
+- Documented unpack temporary plaintext limitations, stricter top-level symlink semantics, and metadata that Ravencap does not preserve.
+
 ## 2.0.0 - 2026-05-03
 
 ### Breaking
