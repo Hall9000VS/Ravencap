@@ -7,4 +7,4 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-ravencap-format = { path = "../ravencap-format" }
+ravencap-format = { path = "../ravencap-format", version = "1.0.1" }

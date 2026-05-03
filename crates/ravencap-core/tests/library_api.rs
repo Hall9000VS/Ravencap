@@ -1,4 +1,12 @@
-use ravencap_core::{EncryptOptions, Identity, PackOptions, Recipient, UnpackOptions, VerifyMode};
+use ravencap_core::{
+    Compression, EncryptOptions, Identity, PackOptions, Recipient, UnpackOptions, VerifyMode,
+};
+
+#[test]
+fn pack_options_default_matches_new_archive_compression() {
+    assert_eq!(PackOptions::default(), PackOptions::new());
+    assert_eq!(PackOptions::default().compression, Compression::Zstd(3));
+}
 
 #[test]
 fn public_raw_encrypt_decrypt_api_roundtrips() {

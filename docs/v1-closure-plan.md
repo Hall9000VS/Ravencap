@@ -67,7 +67,7 @@ Goal: finish v1.0 raw mode as a dependable age-compatible stream tool.
 Deliverables:
 
 - Keep passphrase and public-key raw encrypt/decrypt paths working through standard age APIs.
-- Add explicit CLI options for compression mode, defaulting raw mode to none.
+- Keep raw encrypt/decrypt as pure age envelope operations; compression is archive-layer behavior.
 - Add non-RAVP plaintext rejection for commands that expect Ravencap payload semantics.
 - Add wrong password, wrong key, truncated stream, and tampered stream tests.
 - Add age/rage interoperability tests or an opt-in test script when external binaries are unavailable in CI.

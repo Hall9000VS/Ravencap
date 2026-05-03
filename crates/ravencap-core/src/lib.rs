@@ -99,16 +99,11 @@ pub use inspect::INSPECT_WARNING;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Recipient {
-    PasswordPrompt,
     Passphrase(String),
     PublicKey(String),
 }
 
 impl Recipient {
-    pub fn password_prompt() -> Self {
-        Self::PasswordPrompt
-    }
-
     pub fn passphrase(value: impl Into<String>) -> Self {
         Self::Passphrase(value.into())
     }
@@ -137,7 +132,6 @@ impl Identity {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct EncryptOptions {
     pub recipients: Vec<Recipient>,
-    pub compression: Compression,
 }
 
 impl EncryptOptions {
@@ -149,30 +143,26 @@ impl EncryptOptions {
         self.recipients.push(recipient);
         self
     }
-
-    pub fn compression_none(mut self) -> Self {
-        self.compression = Compression::None;
-        self
-    }
-
-    pub fn compression_zstd(mut self, level: u8) -> Self {
-        self.compression = Compression::Zstd(level);
-        self
-    }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PackOptions {
     pub recipients: Vec<Recipient>,
     pub compression: Compression,
 }
 
-impl PackOptions {
-    pub fn new() -> Self {
+impl Default for PackOptions {
+    fn default() -> Self {
         Self {
             recipients: Vec::new(),
             compression: Compression::Zstd(3),
         }
+    }
+}
+
+impl PackOptions {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn recipient(mut self, recipient: Recipient) -> Self {

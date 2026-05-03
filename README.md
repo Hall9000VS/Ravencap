@@ -1,10 +1,17 @@
 # Ravencap
 
+[![CI](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml/badge.svg)](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml)
+[![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-93450a)](https://www.rust-lang.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.1-informational)](CHANGELOG.md)
+
 Streaming encrypted archive tool for files, folders, and Unix-style pipelines.
 
 ## Status
 
-This repository contains the current Ravencap v1.0 implementation slice: age-compatible streaming encryption, archive pack/unpack, and trust-model commands for public info, manifest inspection, and quick/full verification.
+This repository contains Ravencap v1.0.1: age-compatible streaming encryption, archive pack/unpack, and trust-model commands for public info, manifest inspection, and quick/full verification.
+
+Security status: Ravencap is an experimental personal project and has not been independently audited.
 
 A `.rav` file is a standard age-encrypted file. After age decryption, the plaintext begins with a Ravencap RAVP stream: a small prelude, a JSON manifest prefix, and the content stream.
 
@@ -16,6 +23,20 @@ Ravencap is focused on encrypted files, folders, and pipelines. It does not mana
 ravencap pack --passphrase-file passphrase.txt ./folder -o folder.rav
 ravencap verify folder.rav --passphrase-file passphrase.txt
 ravencap unpack folder.rav --passphrase-file passphrase.txt -o restored-folder
+```
+
+## Install / Build From Source
+
+Install Rust 1.85 or newer from `https://rustup.rs/`, then build the CLI from this repository:
+
+```sh
+cargo build --release
+```
+
+The binary is written to `target/release/ravencap` on Unix-like systems and `target\release\ravencap.exe` on Windows. In PowerShell, run the local binary with an explicit current-directory prefix:
+
+```powershell
+.\target\release\ravencap.exe --help
 ```
 
 ## Usage

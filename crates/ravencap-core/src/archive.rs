@@ -12,8 +12,8 @@ use sha2::{Digest, Sha256};
 
 use crate::manifest::{ArchiveManifest, ManifestEntry, PATH_ENCODING_UTF8_NFC_FORWARD_SLASH};
 use crate::{
-    Compression, EncryptOptions, Identity, PackOptions, RavencapError, Recipient, Result,
-    UnpackOptions, VerifyReport,
+    Compression, Identity, PackOptions, RavencapError, Recipient, Result, UnpackOptions,
+    VerifyReport,
 };
 
 pub fn pack_path(path: &Path, output: impl Write, options: PackOptions) -> Result<()> {
@@ -53,9 +53,26 @@ pub fn unpack_archive(input: impl Read, output_dir: &Path, options: UnpackOption
         read_verified_tar_archive(decrypted, Some(temp_dir.path()))
     })?;
 
+    commit_unpacked_temp_dir(temp_dir, output_dir)
+}
+
+fn commit_unpacked_temp_dir(temp_dir: tempfile::TempDir, output_dir: &Path) -> Result<()> {
+    commit_unpacked_temp_dir_with(temp_dir, output_dir, |temp_path, output_dir| {
+        Ok(std::fs::rename(temp_path, output_dir)?)
+    })
+}
+
+fn commit_unpacked_temp_dir_with(
+    temp_dir: tempfile::TempDir,
+    output_dir: &Path,
+    rename: impl FnOnce(&Path, &Path) -> Result<()>,
+) -> Result<()> {
+    let parent = output_dir.parent().unwrap_or_else(|| Path::new("."));
+    let temp_path = temp_dir.path().to_path_buf();
+
     std::fs::create_dir_all(parent)?;
-    let temp_path = temp_dir.keep();
-    std::fs::rename(temp_path, output_dir)?;
+    rename(&temp_path, output_dir)?;
+    std::mem::forget(temp_dir);
     Ok(())
 }
 
@@ -559,20 +576,40 @@ fn write_ravp_header(
     Ok(())
 }
 
-impl From<PackOptions> for EncryptOptions {
-    fn from(options: PackOptions) -> Self {
-        Self {
-            recipients: options.recipients,
-            compression: options.compression,
-        }
-    }
-}
-
 impl PackOptions {
     pub fn passphrase(passphrase: impl Into<String>) -> Self {
         Self {
             recipients: vec![Recipient::passphrase(passphrase)],
             compression: Compression::Zstd(3),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn failed_final_rename_cleans_unpacked_temp_dir() {
+        let temp_parent = tempfile::tempdir().expect("temp parent");
+        let temp_dir = tempfile::Builder::new()
+            .prefix(".ravencap-unpack-")
+            .tempdir_in(temp_parent.path())
+            .expect("temp unpack dir");
+        let temp_path = temp_dir.path().to_path_buf();
+        let plaintext = temp_path.join("plaintext.txt");
+        let output = temp_parent.path().join("restored");
+
+        std::fs::write(&plaintext, b"secret").expect("write plaintext");
+
+        let result = commit_unpacked_temp_dir_with(temp_dir, &output, |_temp_path, _output| {
+            Err(RavencapError::Io(std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                "forced rename failure",
+            )))
+        });
+
+        assert!(result.is_err());
+        assert!(!temp_path.exists());
     }
 }
