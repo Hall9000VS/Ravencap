@@ -5,6 +5,9 @@ on:
     branches: [main, dev]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -48,3 +51,20 @@ jobs:
 
       - name: Deny
         run: cargo deny check
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@1.88
+
+      - name: Cache cargo registry
+        uses: Swatinem/rust-cache@v2
+        continue-on-error: true
+
+      - name: Check MSRV
+        run: cargo check --workspace --all-targets
+
+      - name: Test MSRV
+        run: cargo test --workspace

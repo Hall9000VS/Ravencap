@@ -1,7 +1,7 @@
 # Ravencap
 
 [![CI](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml/badge.svg)](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml)
-[![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-93450a)](https://www.rust-lang.org/)
+[![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-93450a)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.2-informational)](CHANGELOG.md)
 
@@ -29,7 +29,7 @@ ravencap unpack folder.rav --passphrase-file passphrase.txt -o restored-folder
 
 ## Install / Build From Source
 
-Install Rust 1.85 or newer from `https://rustup.rs/`, then build the CLI from this repository:
+Install Rust 1.88 or newer from `https://rustup.rs/`, then build the CLI from this repository:
 
 ```sh
 cargo build --release
@@ -103,7 +103,7 @@ Omit `-i` or `-o` on `encrypt`/`decrypt` to use stdin or stdout. Use `-` as the 
 
 Managed `-o` writes are committed through a temporary file in the same directory. Existing output paths are preserved unless `--overwrite` is provided. This protects command-managed outputs from accidental replacement and avoids committing partial files when Ravencap returns an error.
 
-Shell redirection is controlled by the shell, not Ravencap. Commands such as `ravencap decrypt ... > output` can leave partial files if interrupted or if the command fails after the shell creates the destination.
+Shell redirection is controlled by the shell, not Ravencap. Commands such as `ravencap decrypt ... > output` can leave partial files if interrupted or if the command fails after the shell creates the destination. Streaming decrypt emits plaintext before final authentication succeeds at EOF; use managed `-o` output or run `verify` first when writing files that should only appear after a fully authenticated read.
 
 Archive unpack extracts to a temporary directory beside the requested output and renames it into place only after manifest and content verification succeeds. The requested output directory must not already exist.
 
@@ -112,6 +112,7 @@ Archive unpack extracts to a temporary directory beside the requested output and
 - Ravencap relies on the age layer for encryption, recipient handling, and stream authentication.
 - Losing a passphrase or private key means Ravencap cannot recover the plaintext.
 - Compromised machines, malicious administrators, keyloggers, and unsafe shell history can expose secrets before Ravencap sees them.
+- Input trees should remain unchanged while `ravencap pack` is running. Ravencap verifies packed archives during later `verify` or `unpack`, but concurrent source changes can produce an archive whose manifest and payload no longer agree.
 - Archive paths are UTF-8, NFC-normalized, forward-slash relative paths. Absolute paths, traversal, Windows drive-like paths, reserved names, and unsafe symlink targets are rejected.
 - Symlinks are restored only when the target stays inside the archive root and resolves to a file or directory entry in the manifest.
 - Extraction should happen in a parent directory controlled by the caller. Ravencap does not fully defend against a concurrent local attacker modifying the extraction parent during the final rename.

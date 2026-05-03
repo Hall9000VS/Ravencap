@@ -73,6 +73,10 @@ fn duplicate_manifest_paths_are_rejected() {
         ],
     });
 
+    assert!(
+        ravencap_core::inspect_manifest(archive.as_slice(), vec![Identity::passphrase(PASSPHRASE)])
+            .is_err()
+    );
     assert_full_verify_and_unpack_reject(&archive);
 }
 

@@ -10,14 +10,14 @@ use ravencap_core::{
 };
 use tempfile::NamedTempFile;
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(name = "ravencap", version, about = "Streaming encrypted archive tool")]
 struct Cli {
     #[command(subcommand)]
     command: Command,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand)]
 enum Command {
     Pack(PackCommand),
     Unpack(UnpackCommand),
@@ -30,7 +30,7 @@ enum Command {
     Pubkey(PathCommand),
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 struct PathCommand {
     input: String,
 
@@ -41,7 +41,7 @@ struct PathCommand {
     overwrite: bool,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 struct PackCommand {
     input: PathBuf,
 
@@ -61,7 +61,7 @@ struct PackCommand {
     recipients: Vec<String>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 struct UnpackCommand {
     input: String,
 
@@ -78,7 +78,7 @@ struct UnpackCommand {
     identities: Vec<PathBuf>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 struct CryptoCommand {
     #[arg(short, long)]
     input: Option<PathBuf>,
@@ -102,7 +102,7 @@ struct CryptoCommand {
     identities: Vec<PathBuf>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 struct VerifyCommand {
     input: String,
 
@@ -122,7 +122,7 @@ struct VerifyCommand {
     identities: Vec<PathBuf>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 struct InspectCommand {
     input: String,
 
@@ -145,7 +145,7 @@ struct InspectCommand {
     identities: Vec<PathBuf>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 struct OutputCommand {
     #[arg(short, long)]
     output: Option<PathBuf>,

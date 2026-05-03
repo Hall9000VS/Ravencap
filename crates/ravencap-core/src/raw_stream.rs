@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 use std::str::FromStr;
 
-use age::secrecy::SecretString;
+use age::secrecy::ExposeSecret;
 use age::{Decryptor, Encryptor};
 
 use crate::decrypt::validate_identities;
@@ -50,7 +50,7 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
     let passphrases = recipients
         .iter()
         .filter_map(|recipient| match recipient {
-            Recipient::Passphrase(passphrase) => Some(passphrase.as_str()),
+            Recipient::Passphrase(passphrase) => Some(passphrase),
             _ => None,
         })
         .collect::<Vec<_>>();
@@ -69,7 +69,7 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
     }
 
     if passphrases.len() == 1 {
-        return Ok(Encryptor::with_user_passphrase(secret(passphrases[0])));
+        return Ok(Encryptor::with_user_passphrase(passphrases[0].clone()));
     }
 
     if passphrases.len() > 1 {
@@ -100,11 +100,11 @@ pub(crate) fn age_identities(identities: &[Identity]) -> Result<Vec<Box<dyn age:
     for identity in identities {
         match identity {
             Identity::Passphrase(passphrase) => {
-                parsed.push(Box::new(age::scrypt::Identity::new(secret(passphrase)))
+                parsed.push(Box::new(age::scrypt::Identity::new(passphrase.clone()))
                     as Box<dyn age::Identity>);
             }
             Identity::PrivateKey(private_key) => {
-                for private_key in private_key_lines(private_key)? {
+                for private_key in private_key_lines(private_key.expose_secret())? {
                     parsed.push(Box::new(private_key) as Box<dyn age::Identity>);
                 }
             }
@@ -141,8 +141,4 @@ fn private_key_lines(value: &str) -> Result<Vec<age::x25519::Identity>> {
     }
 
     Ok(parsed)
-}
-
-pub(crate) fn secret(value: &str) -> SecretString {
-    SecretString::new(value.to_owned().into())
 }

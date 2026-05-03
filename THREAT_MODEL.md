@@ -58,4 +58,8 @@ Ravencap validates archive paths, rejects traversal and unsafe symlink targets, 
 
 This does not fully protect against a local attacker who can concurrently modify the parent output directory during extraction or final rename. Callers should extract into a directory they control and should not share the extraction parent with untrusted writers.
 
-Managed `-o` file outputs are written through same-directory temporary files. Shell redirection is not managed by Ravencap and may leave partial files if the shell creates the destination before a failing command completes.
+Managed `-o` file outputs are written through same-directory temporary files. Shell redirection is not managed by Ravencap and may leave partial files if the shell creates the destination before a failing command completes. Raw streaming decrypt can emit plaintext before the final age authentication check succeeds at EOF; callers that need all-or-nothing files should use managed `-o` output or verify first.
+
+## Pack Input Consistency
+
+Archive packing reads file metadata and hashes for the manifest before writing the TAR payload. If the source tree changes while packing is in progress, the command can produce an archive whose manifest and payload disagree. Full `verify` and `unpack` detect that mismatch, but callers should pack quiescent input trees.

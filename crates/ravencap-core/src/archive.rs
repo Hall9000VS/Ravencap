@@ -221,6 +221,10 @@ enum ExpectedEntry {
     Symlink { target: String, resolved: String },
 }
 
+pub(crate) fn validate_manifest_policy(manifest: &ArchiveManifest) -> Result<()> {
+    validate_manifest(manifest).map(|_| ())
+}
+
 fn validate_manifest(manifest: &ArchiveManifest) -> Result<HashMap<String, ExpectedEntry>> {
     if manifest.version != 1 {
         return Err(RavencapError::Format(format!(

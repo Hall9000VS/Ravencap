@@ -47,6 +47,7 @@ pub fn inspect_manifest(input: impl Read, identities: Vec<Identity>) -> Result<I
     let mut manifest = vec![0_u8; prelude.manifest_length as usize];
     decrypted.read_exact(&mut manifest)?;
     let manifest: ArchiveManifest = serde_json::from_slice(&manifest)?;
+    crate::archive::validate_manifest_policy(&manifest)?;
     let counts = ManifestCounts::from_manifest(&manifest);
 
     Ok(InspectInfo {

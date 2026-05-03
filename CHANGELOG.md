@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Store core passphrases and private identity text in `SecretString` with redacted `Debug` output instead of plain public `String` fields.
+- Removed `Debug` derivations from CLI argument structs that can contain `--insecure-passphrase-cli` values.
+- Made `inspect` apply manifest policy validation before reporting manifest counts.
+- Documented streaming decrypt plaintext emission before final EOF authentication and the requirement to pack quiescent input trees.
+- Added CI coverage for the declared Rust 1.88 MSRV and set workflow permissions to read-only contents.
+
 ## 1.0.2 - 2026-05-03
 
 - Restored the v1.0.0 and v1.0.1 changelog entries after a post-release documentation regression.

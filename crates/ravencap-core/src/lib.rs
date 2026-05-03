@@ -92,20 +92,32 @@ mod raw_stream;
 
 use std::io::{Read, Write};
 use std::path::Path;
+use std::{fmt, fmt::Formatter};
 
-use age::secrecy::ExposeSecret;
+use age::secrecy::{ExposeSecret, SecretString};
 pub use error::{RavencapError, Result};
 pub use inspect::INSPECT_WARNING;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Recipient {
-    Passphrase(String),
+    Passphrase(SecretString),
     PublicKey(String),
+}
+
+impl fmt::Debug for Recipient {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Passphrase(_) => formatter.write_str("Passphrase(<redacted>)"),
+            Self::PublicKey(public_key) => formatter
+                .debug_tuple("PublicKey")
+                .field(public_key)
+                .finish(),
+        }
+    }
 }
 
 impl Recipient {
     pub fn passphrase(value: impl Into<String>) -> Self {
-        Self::Passphrase(value.into())
+        Self::Passphrase(SecretString::new(value.into().into()))
     }
 
     pub fn public_key(value: impl Into<String>) -> Self {
@@ -113,23 +125,31 @@ impl Recipient {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Identity {
-    Passphrase(String),
-    PrivateKey(String),
+    Passphrase(SecretString),
+    PrivateKey(SecretString),
+}
+
+impl fmt::Debug for Identity {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Passphrase(_) => formatter.write_str("Passphrase(<redacted>)"),
+            Self::PrivateKey(_) => formatter.write_str("PrivateKey(<redacted>)"),
+        }
+    }
 }
 
 impl Identity {
     pub fn passphrase(value: impl Into<String>) -> Self {
-        Self::Passphrase(value.into())
+        Self::Passphrase(SecretString::new(value.into().into()))
     }
 
     pub fn private_key(value: impl Into<String>) -> Self {
-        Self::PrivateKey(value.into())
+        Self::PrivateKey(SecretString::new(value.into().into()))
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Default)]
 pub struct EncryptOptions {
     pub recipients: Vec<Recipient>,
 }
@@ -145,7 +165,7 @@ impl EncryptOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct PackOptions {
     pub recipients: Vec<Recipient>,
     pub compression: Compression,
@@ -176,7 +196,7 @@ impl PackOptions {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Default)]
 pub struct UnpackOptions {
     pub identities: Vec<Identity>,
 }

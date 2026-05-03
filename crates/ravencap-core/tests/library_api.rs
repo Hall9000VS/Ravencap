@@ -4,8 +4,22 @@ use ravencap_core::{
 
 #[test]
 fn pack_options_default_matches_new_archive_compression() {
-    assert_eq!(PackOptions::default(), PackOptions::new());
     assert_eq!(PackOptions::default().compression, Compression::Zstd(3));
+    assert_eq!(PackOptions::new().compression, Compression::Zstd(3));
+}
+
+#[test]
+fn secret_bearing_api_debug_output_is_redacted() {
+    let recipient = Recipient::passphrase("do-not-log");
+    let identity = Identity::private_key("AGE-SECRET-KEY-1EXAMPLE");
+    let options = EncryptOptions::new().recipient(Recipient::passphrase("also-secret"));
+
+    let debug_output = format!("{recipient:?} {identity:?} {options:?}");
+
+    assert!(debug_output.contains("<redacted>"));
+    assert!(!debug_output.contains("do-not-log"));
+    assert!(!debug_output.contains("AGE-SECRET-KEY-1EXAMPLE"));
+    assert!(!debug_output.contains("also-secret"));
 }
 
 #[test]
