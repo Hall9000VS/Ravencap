@@ -29,6 +29,12 @@ Streaming encrypted archive tool for files, folders, and Unix-style pipelines.
 | Release provenance | Release workflow publishes checksums, keyless cosign signature material, and GitHub artifact attestations for release archives. |
 | Independent audit | Not yet independently audited by a third party. |
 
+## Security Review Scope
+
+The security-sensitive review surface is the local CLI and Rust library behavior for encrypting, decrypting, packing, verifying, inspecting, and unpacking `.rav` files. In scope: age envelope integration, passphrase and identity handling, RAVP prelude and manifest parsing, archive path validation, TAR payload verification, managed output commits, temporary unpack behavior, release workflow provenance, dependency policy, and fuzz/CI coverage.
+
+Out of scope: compromised hosts, malicious administrators, shell history or terminal capture, storage-layer forensic erasure, cloud sync behavior, key recovery, age plugin implementation trust, hardware-token security, and third-party package manager distribution channels. Ravencap also does not claim a completed independent third-party security audit.
+
 ## Status
 
 This repository contains Ravencap v2.0.1: an age-compatible streaming encryption and archive tool with pack/unpack, manifest inspection, and quick/full verification workflows.
