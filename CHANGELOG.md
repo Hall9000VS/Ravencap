@@ -5,6 +5,7 @@
 - Restored the v1.0.0 and v1.0.1 changelog entries after a post-release documentation regression.
 - Restored archive manifest, unpack, verify, NFC normalization, and symlink regression tests that were accidentally removed after v1.0.1.
 - Converted the fuzz targets from stdin corpus replay binaries into cargo-fuzz/libFuzzer harnesses.
+- Documented the Windows MSVC sanitizer runtime setup needed for local cargo-fuzz runs.
 
 ## 1.0.1 - 2026-05-02
 

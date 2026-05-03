@@ -194,7 +194,7 @@ Acceptance criteria:
 
 Goal: harden all untrusted input boundaries.
 
-Status: Closed for the current v1.0 fuzz harness and malicious regression scope. The targets are cargo-fuzz/libFuzzer harnesses; sustained fuzz runs require a supported nightly/libFuzzer toolchain and runtime.
+Status: Closed for the current v1.0 fuzz harness and malicious regression scope. The targets are cargo-fuzz/libFuzzer harnesses; sustained fuzz runs require a supported nightly/libFuzzer toolchain and sanitizer runtime.
 
 Deliverables:
 
@@ -204,7 +204,7 @@ Deliverables:
 
 Acceptance criteria:
 
-- Fuzz targets build locally with `cargo check --manifest-path fuzz/Cargo.toml --bins`; cargo-fuzz execution is supported on toolchains with the required libFuzzer/sanitizer runtime. [done]
+- Fuzz targets build locally with `cargo check --manifest-path fuzz/Cargo.toml --bins`; checked-in corpora run with `cargo +nightly fuzz run ... -- -runs=0` when the required sanitizer runtime is available. [done]
 - Malicious input integration tests cover the known attack cases from the spec. [done]
 
 ## Milestone 8: Test Vectors And Interop
