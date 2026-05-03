@@ -3,15 +3,17 @@
 [![CI](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml/badge.svg)](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml)
 [![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-93450a)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.2-informational)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.0.0-informational)](CHANGELOG.md)
 
 Streaming encrypted archive tool for files, folders, and Unix-style pipelines.
 
 ## Status
 
-This repository contains Ravencap v1.0.2: an age-compatible streaming encryption and archive tool with pack/unpack, manifest inspection, and quick/full verification workflows.
+This repository contains Ravencap v2.0.0: an age-compatible streaming encryption and archive tool with pack/unpack, manifest inspection, and quick/full verification workflows.
 
 Ravencap is built around conservative security boundaries, explicit non-goals, safe archive extraction, and documented trust-model semantics. It has not undergone an independent third-party security audit.
+
+Release validation and provenance expectations are documented in [docs/release.md](docs/release.md).
 
 Copyright (c) 2026 VaV Labs.
 

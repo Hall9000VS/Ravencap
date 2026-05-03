@@ -33,7 +33,7 @@ pub fn read_public_info(mut input: impl Read) -> Result<PublicInfo> {
 }
 
 pub fn inspect_manifest(input: impl Read, identities: Vec<Identity>) -> Result<InspectInfo> {
-    let identities = crate::raw_stream::age_identities(&identities)?;
+    let identities = crate::raw_stream::age_identities(identities)?;
     let decryptor = Decryptor::new(input).map_err(|error| RavencapError::Age(error.to_string()))?;
     let mut decrypted = decryptor
         .decrypt(identities.iter().map(|identity| identity.as_ref()))

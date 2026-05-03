@@ -15,7 +15,7 @@ pub fn encrypt_stream(
 ) -> Result<()> {
     validate_encrypt_options(&options)?;
 
-    let encryptor = encryptor_from_recipients(&options.recipients)?;
+    let encryptor = encryptor_from_recipients(options.recipients)?;
     let mut encrypted = encryptor
         .wrap_output(output)
         .map_err(|error| RavencapError::Age(error.to_string()))?;
@@ -35,7 +35,7 @@ pub fn decrypt_stream(
 ) -> Result<()> {
     validate_identities(&identities)?;
 
-    let identities = age_identities(&identities)?;
+    let identities = age_identities(identities)?;
     let decryptor = Decryptor::new(input).map_err(|error| RavencapError::Age(error.to_string()))?;
     let mut decrypted = decryptor
         .decrypt(identities.iter().map(|identity| identity.as_ref()))
@@ -46,21 +46,16 @@ pub fn decrypt_stream(
     Ok(())
 }
 
-pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encryptor> {
-    let passphrases = recipients
-        .iter()
-        .filter_map(|recipient| match recipient {
-            Recipient::Passphrase(passphrase) => Some(passphrase),
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-    let public_keys = recipients
-        .iter()
-        .filter_map(|recipient| match recipient {
-            Recipient::PublicKey(public_key) => Some(public_key.as_str()),
-            _ => None,
-        })
-        .collect::<Vec<_>>();
+pub(crate) fn encryptor_from_recipients(recipients: Vec<Recipient>) -> Result<Encryptor> {
+    let mut passphrases = Vec::new();
+    let mut public_keys = Vec::new();
+
+    for recipient in recipients {
+        match recipient {
+            Recipient::Passphrase(passphrase) => passphrases.push(passphrase),
+            Recipient::PublicKey(public_key) => public_keys.push(public_key),
+        }
+    }
 
     if !passphrases.is_empty() && !public_keys.is_empty() {
         return Err(RavencapError::Unsupported(
@@ -69,7 +64,9 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
     }
 
     if passphrases.len() == 1 {
-        return Ok(Encryptor::with_user_passphrase(passphrases[0].clone()));
+        return Ok(Encryptor::with_user_passphrase(
+            passphrases.into_iter().next().expect("checked length"),
+        ));
     }
 
     if passphrases.len() > 1 {
@@ -94,14 +91,15 @@ pub(crate) fn encryptor_from_recipients(recipients: &[Recipient]) -> Result<Encr
     .map_err(|error| RavencapError::Age(error.to_string()))
 }
 
-pub(crate) fn age_identities(identities: &[Identity]) -> Result<Vec<Box<dyn age::Identity>>> {
+pub(crate) fn age_identities(identities: Vec<Identity>) -> Result<Vec<Box<dyn age::Identity>>> {
     let mut parsed = Vec::new();
 
     for identity in identities {
         match identity {
             Identity::Passphrase(passphrase) => {
-                parsed.push(Box::new(age::scrypt::Identity::new(passphrase.clone()))
-                    as Box<dyn age::Identity>);
+                parsed.push(
+                    Box::new(age::scrypt::Identity::new(passphrase)) as Box<dyn age::Identity>
+                );
             }
             Identity::PrivateKey(private_key) => {
                 for private_key in private_key_lines(private_key.expose_secret())? {

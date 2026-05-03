@@ -1024,7 +1024,7 @@ dependencies = [
 
 [[package]]
 name = "ravencap-cli"
-version = "1.0.2"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1036,7 +1036,7 @@ dependencies = [
 
 [[package]]
 name = "ravencap-core"
-version = "1.0.2"
+version = "2.0.0"
 dependencies = [
  "age",
  "ravencap-format",
@@ -1053,7 +1053,7 @@ dependencies = [
 
 [[package]]
 name = "ravencap-format"
-version = "1.0.2"
+version = "2.0.0"
 dependencies = [
  "serde",
  "thiserror 2.0.18",
@@ -1061,7 +1061,7 @@ dependencies = [
 
 [[package]]
 name = "ravencap-testkit"
-version = "1.0.2"
+version = "2.0.0"
 dependencies = [
  "ravencap-format",
 ]

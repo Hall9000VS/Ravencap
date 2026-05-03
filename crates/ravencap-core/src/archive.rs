@@ -17,7 +17,11 @@ use crate::{
 };
 
 pub fn pack_path(path: &Path, output: impl Write, options: PackOptions) -> Result<()> {
-    let encryptor = crate::raw_stream::encryptor_from_recipients(&options.recipients)?;
+    let PackOptions {
+        recipients,
+        compression,
+    } = options;
+    let encryptor = crate::raw_stream::encryptor_from_recipients(recipients)?;
     let mut encrypted = encryptor
         .wrap_output(output)
         .map_err(|error| RavencapError::Age(error.to_string()))?;
@@ -25,7 +29,7 @@ pub fn pack_path(path: &Path, output: impl Write, options: PackOptions) -> Resul
     if path == Path::new("-") {
         pack_raw(std::io::stdin().lock(), &mut encrypted)?;
     } else {
-        pack_tar(path, &mut encrypted, &options.compression)?;
+        pack_tar(path, &mut encrypted, &compression)?;
     }
 
     encrypted
@@ -49,7 +53,7 @@ pub fn unpack_archive(input: impl Read, output_dir: &Path, options: UnpackOption
         .prefix(".ravencap-unpack-")
         .tempdir_in(temp_parent)?;
 
-    with_decrypted_archive(input, &options.identities, |decrypted| {
+    with_decrypted_archive(input, options.identities, |decrypted| {
         read_verified_tar_archive(decrypted, Some(temp_dir.path()))
     })?;
 
@@ -91,7 +95,7 @@ pub(crate) fn verify_archive_contents(
     input: impl Read,
     identities: Vec<Identity>,
 ) -> Result<VerifyReport> {
-    with_decrypted_archive(input, &identities, |decrypted| {
+    with_decrypted_archive(input, identities, |decrypted| {
         read_verified_tar_archive(decrypted, None)
     })?;
 
@@ -160,10 +164,10 @@ fn append_path_to_tar(output: &mut tar::Builder<impl Write>, path: &Path) -> Res
 
 fn with_decrypted_archive<T>(
     input: impl Read,
-    identities: &[Identity],
+    identities: Vec<Identity>,
     operation: impl FnOnce(&mut dyn Read) -> Result<T>,
 ) -> Result<T> {
-    crate::decrypt::validate_identities(identities)?;
+    crate::decrypt::validate_identities(&identities)?;
 
     let identities = crate::raw_stream::age_identities(identities)?;
     let decryptor = Decryptor::new(input).map_err(|error| RavencapError::Age(error.to_string()))?;

@@ -17,23 +17,29 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v5
+      # actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
 
-      - uses: dtolnay/rust-toolchain@stable
+      # dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
         with:
+          toolchain: stable
           components: rustfmt, clippy
 
       - name: Cache cargo registry
-        uses: Swatinem/rust-cache@v2
+        # Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
         continue-on-error: true
 
       - name: Install cargo-audit
-        uses: taiki-e/install-action@v2
+        # taiki-e/install-action@v2
+        uses: taiki-e/install-action@b5fddbb5361bce8a06fb168c9d403a6cc552b084
         with:
           tool: cargo-audit
 
       - name: Install cargo-deny
-        uses: taiki-e/install-action@v2
+        # taiki-e/install-action@v2
+        uses: taiki-e/install-action@b5fddbb5361bce8a06fb168c9d403a6cc552b084
         with:
           tool: cargo-deny
 
@@ -55,12 +61,17 @@ jobs:
   msrv:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      # actions/checkout@v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
 
-      - uses: dtolnay/rust-toolchain@1.88
+      # dtolnay/rust-toolchain@1.88
+      - uses: dtolnay/rust-toolchain@98e1b82157cd469e843cb7f524c1313b4ad9492c
+        with:
+          toolchain: "1.88"
 
       - name: Cache cargo registry
-        uses: Swatinem/rust-cache@v2
+        # Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
         continue-on-error: true
 
       - name: Check MSRV

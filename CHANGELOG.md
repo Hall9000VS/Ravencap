@@ -2,7 +2,18 @@
 
 ## Unreleased
 
+## 2.0.0 - 2026-05-03
+
+### Breaking
+
+- Changed secret-bearing public API variants to store `SecretString`: `Recipient::Passphrase`, `Identity::Passphrase`, and `Identity::PrivateKey` no longer expose plain `String` values.
+- Removed `Clone`, `PartialEq`, and `Eq` implementations from secret-bearing public option and identity types.
+- Raised the declared Rust MSRV from 1.85 to 1.88.
+
+### Security and Hardening
+
 - Store core passphrases and private identity text in `SecretString` with redacted `Debug` output instead of plain public `String` fields.
+- Reduced internal `SecretString` cloning by consuming owned recipient and identity values during age conversion.
 - Removed `Debug` derivations from CLI argument structs that can contain `--insecure-passphrase-cli` values.
 - Made `inspect` apply manifest policy validation before reporting manifest counts.
 - Documented streaming decrypt plaintext emission before final EOF authentication and the requirement to pack quiescent input trees.
