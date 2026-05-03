@@ -1,5 +1,6 @@
 [package]
 name = "ravencap-core"
+description = "Core library for Ravencap encrypted archive and stream workflows."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

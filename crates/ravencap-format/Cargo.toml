@@ -1,5 +1,6 @@
 [package]
 name = "ravencap-format"
+description = "Format types and parsers for Ravencap encrypted archive payloads."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

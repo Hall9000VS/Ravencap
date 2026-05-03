@@ -1,5 +1,6 @@
 [package]
 name = "ravencap-cli"
+description = "Command-line interface for Ravencap encrypted archive workflows."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

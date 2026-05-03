@@ -1,5 +1,6 @@
 [package]
 name = "ravencap-testkit"
+description = "Shared test fixtures and helpers for Ravencap crates."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
