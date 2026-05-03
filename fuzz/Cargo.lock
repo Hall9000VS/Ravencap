@@ -932,7 +932,7 @@ dependencies = [
 
 [[package]]
 name = "ravencap-core"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "age",
  "ravencap-format",
@@ -949,7 +949,7 @@ dependencies = [
 
 [[package]]
 name = "ravencap-format"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "serde",
  "thiserror 2.0.18",

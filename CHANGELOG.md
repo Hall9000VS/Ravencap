@@ -2,12 +2,14 @@
 
 ## Unreleased
 
+## 1.0.2 - 2026-05-03
+
 - Restored the v1.0.0 and v1.0.1 changelog entries after a post-release documentation regression.
 - Restored archive manifest, unpack, verify, NFC normalization, and symlink regression tests that were accidentally removed after v1.0.1.
 - Converted the fuzz targets from stdin corpus replay binaries into cargo-fuzz/libFuzzer harnesses.
 - Documented the Windows MSVC sanitizer runtime setup needed for local cargo-fuzz runs.
 - Kept unpack temporary-directory cleanup active if the final output-directory rename fails after verification.
-- Made RAVP prelude parsing reject unknown payload types and compression codes directly.
+- Made RAVP prelude parsing reject unknown payload types, unknown compression codes, and unsupported payload/compression combinations directly.
 - Aligned `PackOptions::default()` with the documented archive zstd default and removed misleading raw-stream compression, prompt, and lossy option-conversion APIs from the core API.
 - Added README release, build, and security-status polish plus stronger cargo-deny source and duplicate-version policy.
 

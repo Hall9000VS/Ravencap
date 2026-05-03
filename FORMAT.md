@@ -49,7 +49,7 @@ Raw stream payloads use an empty manifest. TAR archive payloads use directory, f
 
 ## Payload Types And Compression
 
-- Raw stream payloads (`payload_type = 1`) carry uninterpreted bytes and use compression `none` by default.
+- Raw stream payloads (`payload_type = 1`) carry uninterpreted bytes and must use compression `none`.
 - TAR archive payloads (`payload_type = 2`) carry a TAR stream and use zstd by default when produced by `ravencap pack`.
 - Full archive verification currently supports uncompressed and zstd-compressed TAR archive payloads.
 

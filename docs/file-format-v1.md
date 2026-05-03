@@ -51,7 +51,7 @@ Raw stream payloads use an empty manifest. TAR archive payloads include one entr
 
 ## Content Streams
 
-- `payload_type = 1`: raw bytes. Ravencap does not interpret the content stream.
+- `payload_type = 1`: raw bytes with compression `none`. Ravencap does not interpret the content stream.
 - `payload_type = 2`: TAR archive. `ravencap pack` uses zstd by default for archive payloads.
 
 Full archive verification supports uncompressed and zstd-compressed TAR archive streams. It parses the TAR stream and checks that every entry matches the manifest type, size, and file digest expectations.

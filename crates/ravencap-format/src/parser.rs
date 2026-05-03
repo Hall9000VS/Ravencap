@@ -20,6 +20,11 @@ pub enum FormatError {
     #[error("unsupported compression code: {0}")]
     UnsupportedCompression(u8),
 
+    #[error(
+        "unsupported payload/compression combination: payload_type={payload_type}, compression={compression}"
+    )]
+    UnsupportedPayloadCompression { payload_type: u8, compression: u8 },
+
     #[error("manifest length exceeds limit: {0}")]
     ManifestTooLarge(u64),
 
@@ -52,6 +57,17 @@ pub fn parse_prelude_prefix(bytes: &[u8]) -> Result<RavpPrelude, FormatError> {
 
     if !matches!(compression, COMPRESSION_NONE | COMPRESSION_ZSTD) {
         return Err(FormatError::UnsupportedCompression(compression));
+    }
+
+    match (payload_type, compression) {
+        (PAYLOAD_RAW, COMPRESSION_NONE) => {}
+        (PAYLOAD_TAR_ARCHIVE, COMPRESSION_NONE | COMPRESSION_ZSTD) => {}
+        _ => {
+            return Err(FormatError::UnsupportedPayloadCompression {
+                payload_type,
+                compression,
+            });
+        }
     }
 
     if manifest_length > MAX_MANIFEST_LENGTH {
@@ -97,5 +113,34 @@ mod tests {
         let error = parse_prelude_prefix(&prefix).expect_err("unknown compression code");
 
         assert!(matches!(error, FormatError::UnsupportedCompression(99)));
+    }
+
+    #[test]
+    fn rejects_raw_payload_with_zstd_compression() {
+        let mut prefix = valid_prefix();
+        prefix[6] = PAYLOAD_RAW;
+        prefix[7] = COMPRESSION_ZSTD;
+
+        let error = parse_prelude_prefix(&prefix).expect_err("raw zstd combination");
+
+        assert!(matches!(
+            error,
+            FormatError::UnsupportedPayloadCompression {
+                payload_type: PAYLOAD_RAW,
+                compression: COMPRESSION_ZSTD,
+            }
+        ));
+    }
+
+    #[test]
+    fn accepts_tar_archive_with_zstd_compression() {
+        let mut prefix = valid_prefix();
+        prefix[6] = PAYLOAD_TAR_ARCHIVE;
+        prefix[7] = COMPRESSION_ZSTD;
+
+        let prelude = parse_prelude_prefix(&prefix).expect("tar zstd combination");
+
+        assert_eq!(prelude.payload_type, PAYLOAD_TAR_ARCHIVE);
+        assert_eq!(prelude.compression, COMPRESSION_ZSTD);
     }
 }

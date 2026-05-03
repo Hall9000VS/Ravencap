@@ -3,15 +3,17 @@
 [![CI](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml/badge.svg)](https://github.com/Hall9000VS/Ravencap/actions/workflows/ci.yml)
 [![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-93450a)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.1-informational)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.2-informational)](CHANGELOG.md)
 
 Streaming encrypted archive tool for files, folders, and Unix-style pipelines.
 
 ## Status
 
-This repository contains Ravencap v1.0.1: age-compatible streaming encryption, archive pack/unpack, and trust-model commands for public info, manifest inspection, and quick/full verification.
+This repository contains Ravencap v1.0.2: age-compatible streaming encryption, archive pack/unpack, and trust-model commands for public info, manifest inspection, and quick/full verification.
 
 Security status: Ravencap is an experimental personal project and has not been independently audited.
+
+Copyright (c) 2026 VaV Labs.
 
 A `.rav` file is a standard age-encrypted file. After age decryption, the plaintext begins with a Ravencap RAVP stream: a small prelude, a JSON manifest prefix, and the content stream.
 
