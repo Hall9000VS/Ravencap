@@ -33,13 +33,13 @@ jobs:
 
       - name: Install cargo-audit
         # taiki-e/install-action@v2
-        uses: taiki-e/install-action@b5fddbb5361bce8a06fb168c9d403a6cc552b084
+        uses: taiki-e/install-action@3771e22aa892e03fd35585fae288baad1755695c
         with:
           tool: cargo-audit
 
       - name: Install cargo-deny
         # taiki-e/install-action@v2
-        uses: taiki-e/install-action@b5fddbb5361bce8a06fb168c9d403a6cc552b084
+        uses: taiki-e/install-action@3771e22aa892e03fd35585fae288baad1755695c
         with:
           tool: cargo-deny
 
